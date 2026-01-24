@@ -41,23 +41,18 @@
 
 ---
 
-## 3. 技术实现深度 (Technical Principles)
+## 3. 技术栈要求 (Technology Stack)
 
-### 3.1 流式传输 (Streaming)
-- **选型理由**：解释为何选择 **SSE (Server-Sent Events)** 相比 WebSocket 在单向输出场景下的优势（如协议轻量、自带重连）。
-- **渲染原理**：前端如何处理 `ReadableStream`，如何将 `chunk` 实时拼接并触发响应式更新，实现顺滑的打字机效果。
+### 3.1 前端模块 (Frontend Requirements)
+- **Vue3 组件化开发**：使用 Composition API 和组件化设计思想构建界面。
+- **响应式状态管理**：使用 Pinia 或 Vue3 Reactive API 管理应用状态。
+- **角色选择/创建界面**：实现角色列表展示、选择及创建功能。
+- **对话界面与消息气泡**：区分用户/AI消息，支持文本和图片的混合展示。
+- **流式文本渲染**：实现 AI 回复的逐字打字机效果。
+- **图片上传与预览**：支持图片选择、预览、删除和重选。
+- **对话历史列表展示**：展示历史对话记录，支持切换不同会话。
 
-### 3.2 数据持久化与表结构 (Database Schema)
-设计需体现角色与对话的关联逻辑：
-- **`roles` 表**：存储人设核心数据。
-    - `id`, `name`, `personality`, `background`, `constraints`, `examples`, `created_at`
-- **`conversations` 表**：管理对话会话。
-    - `id`, `role_id`, `user_id`, `status` (active/archived), `updated_at`
-- **`messages` 表**：存储对话详情。
-    - `id`, `role_id`, `conv_id`, `content`, `type` (text/image), `role` (user/assistant), `created_at`
-
-### 3.3 前端组件架构 (Frontend Architecture)
-建议采用清晰的容器-组件模式进行拆分：
+**前端组件架构建议**：
 ```text
 ChatApp.vue (主容器)
 ├── RoleManager.vue (角色选择与 CRUD 管理)
@@ -68,20 +63,62 @@ ChatApp.vue (主容器)
         └── ImageUploader.vue (图片选择、Canvas 压缩逻辑)
 ```
 
-### 3.4 统一异常处理与规范 (Error Handling)
-- **后端规范**：
-    - 统一使用异常过滤器 (Exception Filter)，返回固定格式：`{ "code": 500, "message": "错误提示", "data": null }`。
-    - 针对流式接口 (SSE)，需处理连接中断的异常情况。
-- **前端规范**：
-    - 利用 axios/fetch 拦截器全局处理 HTTP 错误码（401 未授权、429 频率限制、500 服务异常）。
-    - 针对 UI 层，实现 Toast 或 Message 提示，确保用户在 API 报错时有明确反馈。
+### 3.2 后端模块 (Backend Requirements)
+- **Node.js + NestJS/Express**：使用主流 Node.js 框架搭建后端服务。
+- **MySQL/MongoDB 数据库**：选择关系型或文档型数据库存储数据。
+- **角色数据持久化存储**：实现角色信息的完整 CRUD 操作。
+- **SSE/WebSocket 流式传输**：支持实时流式响应传输到前端。
+- **文件上传服务**：实现图片文件的接收、验证和存储。
+- **大模型 API 对接**：集成 OpenAI/Claude 等大模型 API。
+- **统一异常处理机制**：使用异常过滤器统一处理错误，返回标准格式 `{ "code": 500, "message": "错误提示", "data": null }`。
 
-### 3.5 存储方案 (Storage Strategy)
-- **本地存储 vs. 云存储**：
-    - 开发阶段建议先存入后端 `public/uploads` 目录。
-    - 答辩需准备：“若流量激增，如何迁移至阿里云 OSS/腾讯云 COS？”的回答思路。
-- **图片预处理**：
-    - 前端使用 `Uint8Array` 或 `Canvas` 将图片压至 1MB 以内，并转换为 Base64 或 Multipart 格式传输。
+**数据库表结构设计**：
+- **`roles` 表**：存储人设核心数据
+    - `id`, `name`, `personality`, `background`, `constraints`, `examples`, `created_at`
+- **`conversations` 表**：管理对话会话
+    - `id`, `role_id`, `user_id`, `status` (active/archived), `updated_at`
+- **`messages` 表**：存储对话详情
+    - `id`, `role_id`, `conv_id`, `content`, `type` (text/image), `role` (user/assistant), `created_at`
+
+### 3.3 数据与接口 (API & Data Flow)
+- **RESTful API 规范设计**：遵循 REST 标准，使用合理的 HTTP 方法和状态码。
+- **角色管理接口 (CRUD)**：
+    - `POST /api/roles` - 创建角色
+    - `GET /api/roles` - 获取角色列表
+    - `GET /api/roles/:id` - 获取角色详情
+    - `PUT /api/roles/:id` - 更新角色
+    - `DELETE /api/roles/:id` - 删除角色
+- **对话接口 (支持流式)**：
+    - `POST /api/chat/stream` - 发送消息并接收流式响应 (SSE)
+    - 需支持文本和图片的混合输入
+- **文件上传接口**：
+    - `POST /api/upload` - 上传图片文件
+    - 返回图片的存储路径或 URL
+- **历史记录接口**：
+    - `GET /api/conversations` - 获取会话列表
+    - `GET /api/conversations/:id/messages` - 获取指定会话的消息记录
+- **前后端数据流转清晰**：能够清晰描述从用户操作到数据库存储，再到 AI 响应的完整链路。
+- **接口错误码规范**：定义统一的错误码体系，如：
+    - `200` - 成功
+    - `400` - 请求参数错误
+    - `401` - 未授权
+    - `404` - 资源不存在
+    - `429` - 请求频率限制
+    - `500` - 服务器内部错误
+
+### 3.4 核心技术深度解析
+
+#### 流式传输实现原理
+- **SSE vs. WebSocket**：解释 SSE 在单向输出场景下的优势（协议轻量、自带重连、基于 HTTP）。
+- **前端流式处理**：如何处理 `ReadableStream`，实时拼接 `chunk` 并触发响应式更新，实现打字机效果。
+- **连接管理**：处理流式连接中断、超时等异常情况。
+
+#### 图片处理与存储
+- **前端预处理**：使用 Canvas API 进行图片压缩（目标 1MB 以内），减小带宽消耗。
+- **存储策略**：
+    - 开发阶段：存储至 `public/uploads` 目录
+    - 生产环境：考虑迁移至阿里云 OSS/腾讯云 COS
+- **格式转换**：从 Base64/Binary 转为大模型可识别的格式。
 
 ---
 
