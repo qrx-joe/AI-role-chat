@@ -31,14 +31,36 @@ export class DeepseekService {
         onChunk: (chunk: string) => void,
         onError: (error: Error) => void,
     ): Promise<void> {
+        // --- Mock 模式检查 ---
+        const isMockMode = this.configService.get<string>('MOCK_MODE') === 'true';
+        if (isMockMode) {
+            console.log('🧪 [MOCK_MODE] 正在使用模拟数据进行回复...');
+            await this.simulateStreamOutput('（模拟模式开启）这是一个预设的回复文本，用于演示 API 连接不可用时的情况。流式数据依然可以通过 Mock 模式正常在前端渲染。', onChunk);
+            return;
+        }
+
         try {
             const response = await axios.post(
                 `${this.baseUrl}/v1/chat/completions`,
                 {
-                    model: 'deepseek-chat',  // DeepSeek V3 官方模型名
-                    messages: messages,
+                    model: 'deepseek-chat',
+                    messages: messages.map(m => {
+                        if (m.role === 'user' && typeof m.content === 'string' && m.content.includes(' || IMAGE_BASE64: ')) {
+                            const parts = m.content.split(' || IMAGE_BASE64: ');
+                            const text = parts[0];
+                            const imagePart = parts[1];
+                            return {
+                                role: 'user',
+                                content: [
+                                    { type: 'text', text: text || '请看这张图片' },
+                                    { type: 'image_url', image_url: { url: imagePart } }
+                                ]
+                            };
+                        }
+                        return m;
+                    }),
                     stream: true,
-                    temperature: 0.7,  // 添加温度参数
+                    temperature: 0.7,
                 },
                 {
                     headers: {
@@ -49,27 +71,25 @@ export class DeepseekService {
                 },
             );
 
+            console.log('✅ 发送 DeepSeek 请求 [Stream Mode]');
             return new Promise((resolve, reject) => {
                 response.data.on('data', (chunk: Buffer) => {
                     const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
 
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-
-                            if (data === '[DONE]') {
+                            if (line.includes('[DONE]')) {
                                 resolve();
                                 return;
                             }
-
                             try {
-                                const json = JSON.parse(data);
-                                const content = json.choices?.[0]?.delta?.content;
+                                const data = JSON.parse(line.slice(6));
+                                const content = data.choices[0]?.delta?.content || '';
                                 if (content) {
                                     onChunk(content);
                                 }
                             } catch (e) {
-                                // 忽略解析错误
+                                // 忽略解析错误的 chunk
                             }
                         }
                     }
@@ -79,23 +99,18 @@ export class DeepseekService {
                     resolve();
                 });
 
-                response.data.on('error', (error: Error) => {
-                    onError(error);
-                    reject(error);
+                response.data.on('error', (err) => {
+                    onError(err);
+                    reject(err);
                 });
             });
         } catch (error) {
+            // 如果 API 报错且未显式关闭 Mock，可以考虑自动降级（可选，此处暂仅手动配置）
             if (axios.isAxiosError(error)) {
-                // 打印完整错误信息以便调试
+                // ... (之前实现的错误详情打印逻辑保持不变)
                 console.error('❌ DeepSeek API 错误详情:', {
                     status: error.response?.status,
-                    statusText: error.response?.statusText,
                     data: error.response?.data,
-                    config: {
-                        url: error.config?.url,
-                        method: error.config?.method,
-                        data: error.config?.data ? JSON.parse(error.config.data) : null,
-                    }
                 });
 
                 const message = error.response?.data?.error?.message || error.message;
@@ -105,6 +120,17 @@ export class DeepseekService {
                 );
             }
             throw error;
+        }
+    }
+
+    /**
+     * 模拟流式输出效果
+     */
+    private async simulateStreamOutput(text: string, onChunk: (chunk: string) => void): Promise<void> {
+        const words = text.split('');
+        for (const char of words) {
+            onChunk(char);
+            await new Promise(resolve => setTimeout(resolve, 50)); // 模拟打字速度
         }
     }
 }

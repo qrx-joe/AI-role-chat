@@ -1,38 +1,52 @@
 <template>
   <div class="chat-container">
-    <div v-if="!chatStore.hasSelectedRole" class="empty-state">
+    <div v-if="!chatStore.currentRole" class="empty-state">
       <h2>👈 请选择一个角色开始对话</h2>
     </div>
 
-    <div v-else class="chat-content">
-      <!-- 顶部角色信息 -->
-      <div class="chat-header">
-        <h2>{{ chatStore.currentRole.name }}</h2>
-        <span class="tag">{{ chatStore.currentRole.personality }}</span>
-      </div>
+    <div v-if="chatStore.currentRole" class="chat-main">
+      <!-- 头部信息 -->
+      <header class="chat-header">
+        <div class="role-info">
+          <span class="role-badge">{{ chatStore.currentRole.personality }}</span>
+          <h2>{{ chatStore.currentRole.name }}</h2>
+        </div>
+        <div class="header-actions">
+          <button class="btn-tool" @click="chatStore.togglePromptPreview" title="查看系统提示词">📜 Prompt</button>
+          <button class="btn-tool" @click="showDebug = !showDebug" title="打开调试面板">🛠 Debug</button>
+        </div>
+      </header>
+
+      <!-- 提示词预览弹窗 -->
+      <PromptPreview v-if="chatStore.showPromptPreview" />
+      
+      <!-- Debug 面板 (侧滑/浮动) -->
+      <DebugPanel v-if="showDebug" @close="showDebug = false" />
 
       <!-- 消息列表 -->
       <div class="messages" ref="messagesContainer">
         <div
-          v-for="(message, index) in chatStore.messages"
+          v-for="(msg, index) in chatStore.messages"
           :key="index"
           class="message"
-          :class="message.role"
+          :class="[
+            msg.role, 
+            { 'is-typing': chatStore.isStreaming && index === chatStore.messages.length - 1 && msg.role === 'assistant' }
+          ]"
         >
           <div class="bubble">
-            <div v-if="message.imageBase64" class="image-preview">
-              <img :src="message.imageBase64" alt="用户上传的图片" />
+            <div v-if="msg.type === 'image'" class="image-preview">
+              <img :src="msg.content.includes('||') ? msg.content.split(' || ')[1].split(' ')[1] : msg.content" alt="Upload" />
             </div>
-            <p>{{ message.content }}</p>
-            <span v-if="message.role === 'assistant' && index === chatStore.messages.length - 1 && chatStore.isStreaming" class="cursor">▋</span>
+            <div class="content">{{ msg.content.includes('||') ? msg.content.split(' || ')[0] : msg.content }}</div>
+            <span v-if="msg.role === 'assistant' && index === chatStore.messages.length - 1 && chatStore.isStreaming" class="cursor">▋</span>
           </div>
         </div>
       </div>
 
       <!-- 输入区域 -->
       <div class="input-area">
-        <!-- 暂时禁用图片上传功能，避免 DeepSeek API 400 错误 -->
-        <!-- <ImageUploader v-model:imageBase64="uploadedImage" /> -->
+        <ImageUploader v-model:imageBase64="uploadedImage" />
         <textarea
           v-model="inputText"
           placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
@@ -52,11 +66,14 @@
 import { ref, nextTick, watch } from 'vue';
 import { useChatStore } from '../stores/chat';
 import ImageUploader from './ImageUploader.vue';
+import PromptPreview from './PromptPreview.vue';
+import DebugPanel from './DebugPanel.vue';
 
 const chatStore = useChatStore();
 const inputText = ref('');
 const uploadedImage = ref(null);
 const messagesContainer = ref(null);
+const showDebug = ref(false);
 
 // 自动滚动到底部
 watch(() => chatStore.messages.length, async () => {
@@ -118,13 +135,61 @@ async function handleSend() {
   font-size: 12px;
 }
 
+.message.assistant .bubble.is-typing .content::after {
+  content: '▋';
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 2px;
+  color: #667eea;
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.bubble .content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.chat-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-tool {
+  background: #f1f5f9;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #64748b;
+}
+
+.btn-tool:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
 .messages {
   flex: 1;
+  padding: 24px;
   overflow-y: auto;
-  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .message {

@@ -18,11 +18,16 @@ api.interceptors.response.use(
 
 // 角色管理 API
 export const roleApi = {
-    getAll: () => api.get('/roles'),
-    getById: (id) => api.get(`/roles/${id}`),
-    create: (data) => api.post('/roles', data),
-    update: (id, data) => api.put(`/roles/${id}`, data),
-    delete: (id) => api.delete(`/roles/${id}`),
+    getAll: () => apiClient.get('/roles'),
+    getOne: (id) => apiClient.get(`/roles/${id}`),
+    create: (data) => apiClient.post('/roles', data),
+    update: (id, data) => apiClient.put(`/roles/${id}`, data),
+    delete: (id) => apiClient.delete(`/roles/${id}`),
+};
+
+const conversationApi = {
+    getAll: () => apiClient.get('/conversations'),
+    getMessages: (id) => apiClient.get(`/conversations/${id}/messages`),
 };
 
 // 流式对话

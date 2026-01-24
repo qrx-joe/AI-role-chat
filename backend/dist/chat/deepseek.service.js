@@ -29,10 +29,30 @@ let DeepseekService = class DeepseekService {
         }
     }
     async streamChat(messages, onChunk, onError) {
+        const isMockMode = this.configService.get('MOCK_MODE') === 'true';
+        if (isMockMode) {
+            console.log('🧪 [MOCK_MODE] 正在使用模拟数据进行回复...');
+            await this.simulateStreamOutput('（模拟模式开启）这是一个预设的回复文本，用于演示 API 连接不可用时的情况。流式数据依然可以通过 Mock 模式正常在前端渲染。', onChunk);
+            return;
+        }
         try {
             const response = await axios_1.default.post(`${this.baseUrl}/v1/chat/completions`, {
                 model: 'deepseek-chat',
-                messages: messages,
+                messages: messages.map(m => {
+                    if (m.role === 'user' && typeof m.content === 'string' && m.content.includes(' || IMAGE_BASE64: ')) {
+                        const parts = m.content.split(' || IMAGE_BASE64: ');
+                        const text = parts[0];
+                        const imagePart = parts[1];
+                        return {
+                            role: 'user',
+                            content: [
+                                { type: 'text', text: text || '请看这张图片' },
+                                { type: 'image_url', image_url: { url: imagePart } }
+                            ]
+                        };
+                    }
+                    return m;
+                }),
                 stream: true,
                 temperature: 0.7,
             }, {
@@ -42,19 +62,19 @@ let DeepseekService = class DeepseekService {
                 },
                 responseType: 'stream',
             });
+            console.log('✅ 发送 DeepSeek 请求 [Stream Mode]');
             return new Promise((resolve, reject) => {
                 response.data.on('data', (chunk) => {
                     const lines = chunk.toString().split('\n').filter(line => line.trim() !== '');
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            if (data === '[DONE]') {
+                            if (line.includes('[DONE]')) {
                                 resolve();
                                 return;
                             }
                             try {
-                                const json = JSON.parse(data);
-                                const content = json.choices?.[0]?.delta?.content;
+                                const data = JSON.parse(line.slice(6));
+                                const content = data.choices[0]?.delta?.content || '';
                                 if (content) {
                                     onChunk(content);
                                 }
@@ -67,9 +87,9 @@ let DeepseekService = class DeepseekService {
                 response.data.on('end', () => {
                     resolve();
                 });
-                response.data.on('error', (error) => {
-                    onError(error);
-                    reject(error);
+                response.data.on('error', (err) => {
+                    onError(err);
+                    reject(err);
                 });
             });
         }
@@ -77,18 +97,19 @@ let DeepseekService = class DeepseekService {
             if (axios_1.default.isAxiosError(error)) {
                 console.error('❌ DeepSeek API 错误详情:', {
                     status: error.response?.status,
-                    statusText: error.response?.statusText,
                     data: error.response?.data,
-                    config: {
-                        url: error.config?.url,
-                        method: error.config?.method,
-                        data: error.config?.data ? JSON.parse(error.config.data) : null,
-                    }
                 });
                 const message = error.response?.data?.error?.message || error.message;
                 throw new common_1.HttpException(`DeepSeek API 错误: ${message}`, error.response?.status || common_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
             throw error;
+        }
+    }
+    async simulateStreamOutput(text, onChunk) {
+        const words = text.split('');
+        for (const char of words) {
+            onChunk(char);
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
     }
 };

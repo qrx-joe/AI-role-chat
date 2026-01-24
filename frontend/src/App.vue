@@ -1,11 +1,10 @@
 <template>
   <div class="app">
-    <aside class="sidebar">
+    <div class="sidebar">
       <RoleManager />
-    </aside>
-    <main class="main-content">
-      <ChatContainer />
-    </main>
+      <HistorySidebar />
+    </div>
+    <ChatContainer />
   </div>
 </template>
 
@@ -13,6 +12,7 @@
 import { onMounted } from 'vue';
 import RoleManager from './components/RoleManager.vue';
 import ChatContainer from './components/ChatContainer.vue';
+import HistorySidebar from './components/HistorySidebar.vue';
 import { useChatStore } from './stores/chat';
 
 const chatStore = useChatStore();
@@ -31,9 +31,21 @@ onMounted(() => {
 
 .sidebar {
   width: 320px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  background: #f5f7fb;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.sidebar > *:first-child {
+  flex: 0 0 auto;
+  max-height: 50%;
+  overflow-y: auto;
+}
+
+.sidebar > *:last-child {
+  flex: 1;
   overflow-y: auto;
 }
 

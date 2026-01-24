@@ -15,4 +15,5 @@ export declare class DeepseekService {
     private baseUrl;
     constructor(configService: ConfigService);
     streamChat(messages: ChatMessage[], onChunk: (chunk: string) => void, onError: (error: Error) => void): Promise<void>;
+    private simulateStreamOutput;
 }

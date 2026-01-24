@@ -2,7 +2,7 @@
   <div class="role-manager">
     <div class="header">
       <h2>AI 角色</h2>
-      <button class="btn-create" @click="showCreateDialog = true">+ 创建角色</button>
+      <button class="btn-create" @click="openCreateDialog">+ 创建角色</button>
     </div>
 
     <div class="role-list">
@@ -15,22 +15,25 @@
       >
         <h3>{{ role.name }}</h3>
         <p class="personality">{{ role.personality }}</p>
-        <button class="btn-delete" @click.stop="handleDelete(role.id)">删除</button>
+        <div class="card-actions">
+          <button class="btn-edit" @click.stop="openEditDialog(role)">编辑</button>
+          <button class="btn-delete" @click.stop="handleDelete(role.id)">删除</button>
+        </div>
       </div>
     </div>
 
-    <!-- 创建角色弹窗 -->
-    <div v-if="showCreateDialog" class="dialog-overlay" @click="showCreateDialog = false">
+    <!-- 创建/编辑角色弹窗 -->
+    <div v-if="showDialog" class="dialog-overlay" @click="closeDialog">
       <div class="dialog" @click.stop>
-        <h3>创建新角色</h3>
-        <input v-model="newRole.name" placeholder="角色名称" />
-        <textarea v-model="newRole.personality" placeholder="性格特征（如：毒舌、温柔、严谨）" rows="2"></textarea>
-        <textarea v-model="newRole.background" placeholder="背景故事" rows="3"></textarea>
-        <textarea v-model="newRole.constraints" placeholder="行为约束（可选）" rows="2"></textarea>
-        <textarea v-model="newRole.examples" placeholder="对话示例（可选）" rows="3"></textarea>
+        <h3>{{ isEditing ? '编辑角色' : '创建新角色' }}</h3>
+        <input v-model="roleForm.name" placeholder="角色名称" />
+        <textarea v-model="roleForm.personality" placeholder="性格特征（如：毒舌、温柔、严谨）" rows="2"></textarea>
+        <textarea v-model="roleForm.background" placeholder="背景故事" rows="3"></textarea>
+        <textarea v-model="roleForm.constraints" placeholder="行为约束（可选）" rows="2"></textarea>
+        <textarea v-model="roleForm.examples" placeholder="对话示例（可选）" rows="3"></textarea>
         <div class="dialog-actions">
-          <button @click="showCreateDialog = false">取消</button>
-          <button @click="handleCreate" class="btn-primary">创建</button>
+          <button @click="closeDialog">取消</button>
+          <button @click="handleSubmit" class="btn-primary">{{ isEditing ? '保存修改' : '立即创建' }}</button>
         </div>
       </div>
     </div>
@@ -42,8 +45,10 @@ import { ref } from 'vue';
 import { useChatStore } from '../stores/chat';
 
 const chatStore = useChatStore();
-const showCreateDialog = ref(false);
-const newRole = ref({
+const showDialog = ref(false);
+const isEditing = ref(false);
+const editingRoleId = ref(null);
+const roleForm = ref({
   name: '',
   personality: '',
   background: '',
@@ -51,16 +56,37 @@ const newRole = ref({
   examples: '',
 });
 
-async function handleCreate() {
-  if (!newRole.value.name || !newRole.value.personality || !newRole.value.background) {
+function openCreateDialog() {
+  isEditing.value = false;
+  editingRoleId.value = null;
+  roleForm.value = { name: '', personality: '', background: '', constraints: '', examples: '' };
+  showDialog.value = true;
+}
+
+function openEditDialog(role) {
+  isEditing.value = true;
+  editingRoleId.value = role.id;
+  roleForm.value = { ...role };
+  showDialog.value = true;
+}
+
+function closeDialog() {
+  showDialog.value = false;
+}
+
+async function handleSubmit() {
+  if (!roleForm.value.name || !roleForm.value.personality || !roleForm.value.background) {
     alert('请填写必填字段：名称、性格、背景');
     return;
   }
   
   try {
-    await chatStore.createRole(newRole.value);
-    showCreateDialog.value = false;
-    newRole.value = { name: '', personality: '', background: '', constraints: '', examples: '' };
+    if (isEditing.value) {
+      await chatStore.updateRole(editingRoleId.value, roleForm.value);
+    } else {
+      await chatStore.createRole(roleForm.value);
+    }
+    showDialog.value = false;
   } catch (error) {
     console.error(error);
   }
@@ -127,23 +153,35 @@ async function handleDelete(roleId) {
   margin: 8px 0;
 }
 
-.btn-delete {
+.card-actions {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #ff4444;
-  color: white;
-  border: none;
-  padding: 4px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
+  display: flex;
+  gap: 8px;
   opacity: 0;
   transition: opacity 0.3s;
 }
 
-.role-card:hover .btn-delete {
+.role-card:hover .card-actions {
   opacity: 1;
+}
+
+.btn-edit, .btn-delete {
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  border: none;
+  color: white;
+}
+
+.btn-edit {
+  background: #667eea;
+}
+
+.btn-delete {
+  background: #ff4444;
 }
 
 .dialog-overlay {
