@@ -31,6 +31,7 @@
 
       <!-- 输入区域 -->
       <div class="input-area">
+        <ImageUploader v-model:imageBase64="uploadedImage" />
         <textarea
           v-model="inputText"
           placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
@@ -38,7 +39,7 @@
           :disabled="chatStore.isStreaming"
           rows="3"
         ></textarea>
-        <button @click="handleSend" :disabled="!inputText.trim() || chatStore.isStreaming" class="btn-send">
+        <button @click="handleSend" :disabled="(!inputText.trim() && !uploadedImage) || chatStore.isStreaming" class="btn-send">
           {{ chatStore.isStreaming ? '发送中...' : '发送' }}
         </button>
       </div>
@@ -49,9 +50,11 @@
 <script setup>
 import { ref, nextTick, watch } from 'vue';
 import { useChatStore } from '../stores/chat';
+import ImageUploader from './ImageUploader.vue';
 
 const chatStore = useChatStore();
 const inputText = ref('');
+const uploadedImage = ref(null);
 const messagesContainer = ref(null);
 
 // 自动滚动到底部
@@ -63,12 +66,15 @@ watch(() => chatStore.messages.length, async () => {
 });
 
 async function handleSend() {
-  if (!inputText.value.trim() || chatStore.isStreaming) return;
+  if ((!inputText.value.trim() && !uploadedImage.value) || chatStore.isStreaming) return;
 
-  const text = inputText.value.trim();
+  const text = inputText.value.trim() || '请看这张图片';
+  const image = uploadedImage.value;
+  
   inputText.value = '';
+  uploadedImage.value = null;
 
-  await chatStore.sendMessage(text);
+  await chatStore.sendMessage(text, image);
 }
 </script>
 
@@ -176,6 +182,13 @@ async function handleSend() {
   padding: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-area > div:first-child {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
@@ -197,6 +210,7 @@ async function handleSend() {
   cursor: pointer;
   font-weight: bold;
   transition: transform 0.2s;
+  align-self: flex-end;
 }
 
 .btn-send:hover:not(:disabled) {

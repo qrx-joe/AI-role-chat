@@ -14,6 +14,8 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const roles_module_1 = require("./roles/roles.module");
 const chat_module_1 = require("./chat/chat.module");
+const conversations_module_1 = require("./conversations/conversations.module");
+const upload_module_1 = require("./upload/upload.module");
 const role_entity_1 = require("./roles/role.entity");
 const conversation_entity_1 = require("./conversations/conversation.entity");
 const message_entity_1 = require("./messages/message.entity");
@@ -34,6 +36,8 @@ exports.AppModule = AppModule = __decorate([
             }),
             roles_module_1.RolesModule,
             chat_module_1.ChatModule,
+            conversations_module_1.ConversationsModule,
+            upload_module_1.UploadModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

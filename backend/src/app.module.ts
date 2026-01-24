@@ -5,6 +5,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RolesModule } from './roles/roles.module';
 import { ChatModule } from './chat/chat.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { UploadModule } from './upload/upload.module';
 import { Role } from './roles/role.entity';
 import { Conversation } from './conversations/conversation.entity';
 import { Message } from './messages/message.entity';
@@ -22,6 +24,8 @@ import { Message } from './messages/message.entity';
     }),
     RolesModule,
     ChatModule,
+    ConversationsModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
