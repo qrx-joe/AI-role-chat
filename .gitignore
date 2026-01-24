@@ -11,7 +11,12 @@ build/
 .next/
 out/
 
-
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Database
 *.sqlite
@@ -128,7 +133,5 @@ coverage/
 # Documentation build
 docs/build/
 docs/_build/
-backend/.env
-backend/.env
 backend/.env
 backend/.env
