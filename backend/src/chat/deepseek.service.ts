@@ -35,9 +35,10 @@ export class DeepseekService {
             const response = await axios.post(
                 `${this.baseUrl}/v1/chat/completions`,
                 {
-                    model: 'deepseek-chat',
+                    model: 'deepseek-chat',  // DeepSeek V3 官方模型名
                     messages: messages,
                     stream: true,
+                    temperature: 0.7,  // 添加温度参数
                 },
                 {
                     headers: {
@@ -85,6 +86,18 @@ export class DeepseekService {
             });
         } catch (error) {
             if (axios.isAxiosError(error)) {
+                // 打印完整错误信息以便调试
+                console.error('❌ DeepSeek API 错误详情:', {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    config: {
+                        url: error.config?.url,
+                        method: error.config?.method,
+                        data: error.config?.data ? JSON.parse(error.config.data) : null,
+                    }
+                });
+
                 const message = error.response?.data?.error?.message || error.message;
                 throw new HttpException(
                     `DeepSeek API 错误: ${message}`,

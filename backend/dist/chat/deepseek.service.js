@@ -34,6 +34,7 @@ let DeepseekService = class DeepseekService {
                 model: 'deepseek-chat',
                 messages: messages,
                 stream: true,
+                temperature: 0.7,
             }, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,6 +75,16 @@ let DeepseekService = class DeepseekService {
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
+                console.error('❌ DeepSeek API 错误详情:', {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    config: {
+                        url: error.config?.url,
+                        method: error.config?.method,
+                        data: error.config?.data ? JSON.parse(error.config.data) : null,
+                    }
+                });
                 const message = error.response?.data?.error?.message || error.message;
                 throw new common_1.HttpException(`DeepSeek API 错误: ${message}`, error.response?.status || common_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }

@@ -31,7 +31,8 @@
 
       <!-- 输入区域 -->
       <div class="input-area">
-        <ImageUploader v-model:imageBase64="uploadedImage" />
+        <!-- 暂时禁用图片上传功能，避免 DeepSeek API 400 错误 -->
+        <!-- <ImageUploader v-model:imageBase64="uploadedImage" /> -->
         <textarea
           v-model="inputText"
           placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
