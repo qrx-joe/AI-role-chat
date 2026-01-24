@@ -1,47 +1,52 @@
 @echo off
+chcp 65001 >nul
 echo ========================================
-echo   AI 角色聊天项目 - 一键启动脚本
+echo   AI Role Chat - Quick Start Script
 echo ========================================
 echo.
 
-REM 检查是否配置了 API Key
+REM Check API Key configuration
 findstr /C:"DEEPSEEK_API_KEY=sk-" backend\.env >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [警告] 请先配置 backend\.env 中的 DEEPSEEK_API_KEY
+    echo [WARNING] DeepSeek API Key not configured or invalid format
+    echo TIP: Please configure real API Key in backend\.env (starts with sk-)
+    echo NOTE: Without real API Key, AI chat function will not work
     echo.
-    pause
-    exit /b 1
+    echo Press any key to continue (for testing other features) or Ctrl+C to cancel...
+    pause >nul
+    echo.
 )
 
-echo [1/3] 检查依赖...
+echo [1/3] Checking dependencies...
 cd backend
 if not exist node_modules (
-    echo [后端] 正在安装依赖...
+    echo [Backend] Installing dependencies...
     call npm install
 )
 cd ..
 
 cd frontend
 if not exist node_modules (
-    echo [前端] 正在安装依赖...
+    echo [Frontend] Installing dependencies...
     call npm install
 )
 cd ..
 
 echo.
-echo [2/3] 启动后端服务...
+echo [2/3] Starting backend service...
 start "AI Chat - Backend" cmd /k "cd backend && npm run start:dev"
 timeout /t 3 /nobreak >nul
 
-echo [3/3] 启动前端服务...
+echo [3/3] Starting frontend service...
 start "AI Chat - Frontend" cmd /k "cd frontend && npm run dev"
 
 echo.
 echo ========================================
-echo   ✅ 项目已启动！
-echo   后端: http://localhost:3000
-echo   前端: http://localhost:5173
+echo   SUCCESS! Project started!
+echo   Backend: http://localhost:3000
+echo   Frontend: http://localhost:5173
 echo ========================================
 echo.
-echo 按任意键关闭此窗口...
+echo Press any key to close this window...
 pause >nul
+

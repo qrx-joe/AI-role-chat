@@ -79,60 +79,61 @@ export const useChatStore = defineStore('chat', () => {
         try {
             const response = await fetch('http://localhost:3000/api/chat/stream', {
                 method: 'POST',
-                headers: headers: {
-                'Content-Type': 'application/json',
-            },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
                     roleId: currentRole.value.id,
                     message: text,
                     conversationId: conversationId.value,
                     imageBase64: imageBase64,
                 }),
-      });
+            });
 
-const reader = response.body.getReader();
-const decoder = new TextDecoder();
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
 
-while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-    const chunk = decoder.decode(value);
-    const lines = chunk.split('\n');
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
 
-    for (const line of lines) {
-        if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6));
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.slice(6));
 
-            if (data.chunk) {
-                messages.value[aiMessageIndex].content += data.chunk;
-            } else if (data.done) {
-                conversationId.value = data.conversationId;
-            } else if (data.error) {
-                throw new Error(data.error);
+                        if (data.chunk) {
+                            messages.value[aiMessageIndex].content += data.chunk;
+                        } else if (data.done) {
+                            conversationId.value = data.conversationId;
+                        } else if (data.error) {
+                            throw new Error(data.error);
+                        }
+                    }
+                }
             }
+        } catch (error) {
+            console.error('发送消息失败:', error);
+            messages.value[aiMessageIndex].content = '❌ 发送失败: ' + error.message;
+        } finally {
+            isStreaming.value = false;
         }
     }
-}
-    } catch (error) {
-    console.error('发送消息失败:', error);
-    messages.value[aiMessageIndex].content = '❌ 发送失败: ' + error.message;
-} finally {
-    isStreaming.value = false;
-}
-  }
 
-return {
-    roles,
-    currentRole,
-    messages,
-    conversationId,
-    isStreaming,
-    hasSelectedRole,
-    loadRoles,
-    selectRole,
-    createRole,
-    deleteRole,
-    sendMessage,
-};
+
+    return {
+        roles,
+        currentRole,
+        messages,
+        conversationId,
+        isStreaming,
+        hasSelectedRole,
+        loadRoles,
+        selectRole,
+        createRole,
+        deleteRole,
+        sendMessage,
+    };
 });
