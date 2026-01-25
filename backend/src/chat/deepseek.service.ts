@@ -80,14 +80,18 @@ export class DeepseekService {
         // --- 视觉模式下清除历史消息 (防止 Token 超限) ---
         let processedMessages = messages;
         if (hasImage) {
-            const systemMessage = messages.find(m => m.role === 'system');
             const lastUserMessage = messages.filter(m => m.role === 'user').pop();
 
-            processedMessages = [];
-            if (systemMessage) processedMessages.push(systemMessage);
+            // 在视觉模式下，使用简洁的图片识别提示，避免复杂角色扮演导致重复
+            processedMessages = [
+                {
+                    role: 'system',
+                    content: '你是一个图片识别助手。请仔细观察用户上传的图片，用简洁、准确的中文描述图片内容。描述应包括：主要物体、场景、色彩、氛围等关键信息。避免重复相同的词语。'
+                }
+            ];
             if (lastUserMessage) processedMessages.push(lastUserMessage);
 
-            console.log(`📸 视觉模式: 已清除历史消息，仅保留 ${processedMessages.length} 条消息`);
+            console.log(`📸 视觉模式: 使用简化提示，仅保留 ${processedMessages.length} 条消息`);
             console.log(`📸 最后用户消息类型: ${Array.isArray(lastUserMessage?.content) ? 'array' : typeof lastUserMessage?.content}`);
             if (Array.isArray(lastUserMessage?.content)) {
                 console.log(`📸 消息包含元素: ${lastUserMessage.content.map(c => c.type).join(', ')}`);
@@ -153,7 +157,10 @@ export class DeepseekService {
                         return m;
                     }),
                     stream: true,
-                    temperature: 0.7,
+                    temperature: 0.3,           // 进一步降低随机性
+                    max_tokens: 512,            // 限制输出长度，防止无限重复
+                    top_p: 0.5,                 // 更严格的采样
+                    repetition_penalty: 1.2,    // 重复惩罚参数，防止重复输出
                 },
                 {
                     headers: {
