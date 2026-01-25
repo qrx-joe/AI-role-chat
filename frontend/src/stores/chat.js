@@ -116,14 +116,15 @@ export const useChatStore = defineStore('chat', () => {
     async function sendMessage(text, imageBase64 = null) {
         if (!currentRole.value || isStreaming.value) return;
 
-        const userMessage = { role: 'user', content: text, type: imageBase64 ? 'image' : 'text' };
+        // 构建用户消息内容（带图片标记，方便前端解析显示）
+        const messageContent = imageBase64 ? `${text} || IMAGE_BASE64: ${imageBase64}` : text;
+        const userMessage = { role: 'user', content: messageContent, type: imageBase64 ? 'image' : 'text' };
         messages.value.push(userMessage);
 
         const aiMessageIndex = messages.value.length;
         messages.value.push({ role: 'assistant', content: '', type: 'text' });
 
         isStreaming.value = true;
-        const fullText = imageBase64 ? `${text} || IMAGE_BASE64: ${imageBase64}` : text;
         lastRequestData.value = { roleId: currentRole.value.id, message: text, image: imageBase64 ? 'BASE64_IMAGE' : null };
         lastResponseChunks.value = [];
 
@@ -135,7 +136,7 @@ export const useChatStore = defineStore('chat', () => {
                 },
                 body: JSON.stringify({
                     roleId: currentRole.value.id,
-                    message: fullText,
+                    message: messageContent,
                     conversationId: currentConversationId.value,
                     imageBase64: imageBase64,
                 }),
