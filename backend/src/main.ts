@@ -11,6 +11,11 @@ async function bootstrap() {
   // 启用 CORS
   app.enableCors();
 
+  // 增加 Body 解析限制，支持大图 Base64 上传
+  const express = require('express');
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
   // 配置静态文件访问
   app.useStaticAssets(join(__dirname, '..', 'public'), {
     prefix: '/',

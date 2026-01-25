@@ -6,6 +6,8 @@ const api = axios.create({
     baseURL: API_BASE_URL,
 });
 
+const apiClient = api; // 别名以保持兼容性
+
 // 响应拦截器
 api.interceptors.response.use(
     (response) => response,
@@ -25,30 +27,11 @@ export const roleApi = {
     delete: (id) => apiClient.delete(`/roles/${id}`),
 };
 
-const conversationApi = {
+export const conversationApi = {
     getAll: () => apiClient.get('/conversations'),
     getMessages: (id) => apiClient.get(`/conversations/${id}/messages`),
 };
 
-// 流式对话
-export const chatApi = {
-    streamChat: (roleId, message, conversationId = null, imageBase64 = null) => {
-        return new EventSource(
-            `${API_BASE_URL}/chat/stream`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    roleId,
-                    message,
-                    conversationId,
-                    imageBase64,
-                }),
-            }
-        );
-    },
-};
+// 已移除废弃的 chatApi，流式对话直接在 store 中使用 fetch 实现
 
 export default api;

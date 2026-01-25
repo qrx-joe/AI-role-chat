@@ -1,11 +1,12 @@
 <template>
   <div class="chat-container">
     <div v-if="!chatStore.currentRole" class="empty-state">
-      <h2>👈 请选择一个角色开始对话</h2>
+      <div class="empty-icon">👈</div>
+      <h2>请选择一个角色开始对话</h2>
+      <p>或者在左上角创建一个新的人设</p>
     </div>
 
-    <div v-if="chatStore.currentRole" class="chat-main">
-      <!-- 头部信息 -->
+    <div v-else class="chat-main">
       <header class="chat-header">
         <div class="role-info">
           <span class="role-badge">{{ chatStore.currentRole.personality }}</span>
@@ -17,35 +18,29 @@
         </div>
       </header>
 
-      <!-- 提示词预览弹窗 -->
+      <!-- 演示增强组件 -->
       <PromptPreview v-if="chatStore.showPromptPreview" />
-      
-      <!-- Debug 面板 (侧滑/浮动) -->
       <DebugPanel v-if="showDebug" @close="showDebug = false" />
 
-      <!-- 消息列表 -->
-      <div class="messages" ref="messagesContainer">
+      <div class="messages-list" ref="messagesContainer">
         <div
           v-for="(msg, index) in chatStore.messages"
           :key="index"
-          class="message"
-          :class="[
-            msg.role, 
-            { 'is-typing': chatStore.isStreaming && index === chatStore.messages.length - 1 && msg.role === 'assistant' }
-          ]"
+          class="message-wrap"
+          :class="[msg.role, { 'is-typing': chatStore.isStreaming && index === chatStore.messages.length - 1 && msg.role === 'assistant' }]"
         >
-          <div class="bubble">
-            <div v-if="msg.type === 'image'" class="image-preview">
-              <img :src="msg.content.includes('||') ? msg.content.split(' || ')[1].split(' ')[1] : msg.content" alt="Upload" />
-            </div>
-            <div class="content">{{ msg.content.includes('||') ? msg.content.split(' || ')[0] : msg.content }}</div>
-            <span v-if="msg.role === 'assistant' && index === chatStore.messages.length - 1 && chatStore.isStreaming" class="cursor">▋</span>
+          <div class="message-bubble">
+            <template v-if="msg.type === 'image'">
+              <div class="image-box" v-if="chatStore.parseMessageContent(msg.content).image">
+                <img :src="chatStore.parseMessageContent(msg.content).image" alt="Upload" />
+              </div>
+            </template>
+            <div class="text-content">{{ chatStore.parseMessageContent(msg.content).text }}</div>
           </div>
         </div>
       </div>
 
-      <!-- 输入区域 -->
-      <div class="input-area">
+      <div class="input-panel">
         <ImageUploader v-model:imageBase64="uploadedImage" />
         <textarea
           v-model="inputText"
@@ -54,8 +49,12 @@
           :disabled="chatStore.isStreaming"
           rows="3"
         ></textarea>
-        <button @click="handleSend" :disabled="(!inputText.trim() && !uploadedImage) || chatStore.isStreaming" class="btn-send">
-          {{ chatStore.isStreaming ? '发送中...' : '发送' }}
+        <button 
+          @click="handleSend" 
+          :disabled="(!inputText.trim() && !uploadedImage) || chatStore.isStreaming" 
+          class="send-btn"
+        >
+          {{ chatStore.isStreaming ? '🚀' : '发送' }}
         </button>
       </div>
     </div>
@@ -81,7 +80,7 @@ watch(() => chatStore.messages.length, async () => {
   if (messagesContainer.value) {
     messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
   }
-});
+}, { deep: true });
 
 async function handleSend() {
   if ((!inputText.value.trim() && !uploadedImage.value) || chatStore.isStreaming) return;
@@ -98,84 +97,55 @@ async function handleSend() {
 
 <style scoped>
 .chat-container {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
+  background: #f5f7fb;
 }
 
 .empty-state {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: #94a3b8;
 }
 
-.chat-content {
+.empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+
+.chat-main {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .chat-header {
-  padding: 20px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  z-index: 5;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-}
-
-.tag {
-  background: #667eea;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-}
-
-.message.assistant .bubble.is-typing .content::after {
-  content: '▋';
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 2px;
-  color: #667eea;
-  animation: blink 0.8s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.bubble .content {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-.chat-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
 }
 
 .header-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn-tool {
   background: #f1f5f9;
   border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
   color: #64748b;
+  transition: all 0.2s;
 }
 
 .btn-tool:hover {
@@ -183,108 +153,94 @@ async function handleSend() {
   color: #1e293b;
 }
 
-.messages {
+.role-info { display: flex; align-items: center; gap: 12px; }
+.role-badge { 
+  background: #667eea; 
+  color: white; 
+  font-size: 11px; 
+  padding: 2px 8px; 
+  border-radius: 4px; 
+}
+
+.messages-list {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
-.message {
-  display: flex;
-  animation: fadeIn 0.3s;
-}
+.message-wrap { display: flex; width: 100%; }
+.message-wrap.user { justify-content: flex-end; }
+.message-wrap.assistant { justify-content: flex-start; }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.message.user {
-  justify-content: flex-end;
-}
-
-.message.assistant {
-  justify-content: flex-start;
-}
-
-.bubble {
-  max-width: 70%;
+.message-bubble {
+  max-width: 80%;
   padding: 12px 16px;
-  border-radius: 16px;
-  word-wrap: break-word;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.message.user .bubble {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+.user .message-bubble {
+  background: #667eea;
   color: white;
+  border-top-right-radius: 2px;
 }
 
-.message.assistant .bubble {
+.assistant .message-bubble {
   background: white;
-  border: 1px solid #eee;
-  color: #333;
+  color: #1e293b;
+  border-top-left-radius: 2px;
+  border: 1px solid #e2e8f0;
 }
 
-.cursor {
-  animation: blink 1s infinite;
-  margin-left: 2px;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-.image-preview img {
-  max-width: 200px;
+.image-box img {
+  max-width: 100%;
   border-radius: 8px;
   margin-bottom: 8px;
 }
 
-.input-area {
-  padding: 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+.is-typing .message-bubble::after {
+  content: '▋';
+  display: inline-block;
+  margin-left: 4px;
+  animation: blink 0.8s infinite;
+  color: #667eea;
+}
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.input-panel {
+  padding: 20px 24px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
   display: flex;
-  flex-direction: column;
+  align-items: flex-end;
   gap: 12px;
 }
 
-.input-area > div:first-child {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.input-area textarea {
+textarea {
   flex: 1;
-  padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  font-family: inherit;
+  padding: 12px;
   resize: none;
+  font-family: inherit;
+  font-size: 14px;
+  max-height: 120px;
 }
 
-.btn-send {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+.send-btn {
+  background: #667eea;
   color: white;
   border: none;
+  padding: 12px 20px;
   border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
-  transition: transform 0.2s;
-  align-self: flex-end;
 }
 
-.btn-send:hover:not(:disabled) {
-  transform: scale(1.05);
-}
-
-.btn-send:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

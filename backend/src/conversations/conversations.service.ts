@@ -15,7 +15,7 @@ export class ConversationsService {
 
     async findAll(): Promise<Conversation[]> {
         return await this.conversationsRepository.find({
-            relations: ['role'],
+            relations: ['role', 'messages'],
             order: { updatedAt: 'DESC' },
         });
     }

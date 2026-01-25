@@ -3,6 +3,8 @@ import { ref, computed } from 'vue';
 import { roleApi, conversationApi } from '../api';
 
 export const useChatStore = defineStore('chat', () => {
+    const baseURL = 'http://localhost:3000/api';
+
     // State
     const roles = ref([]);
     const currentRole = ref(null);
@@ -16,6 +18,15 @@ export const useChatStore = defineStore('chat', () => {
 
     // Getters
     const hasSelectedRole = computed(() => !!currentRole.value);
+
+    // Helpers
+    function parseMessageContent(content) {
+        if (typeof content !== 'string') return { text: '', image: null };
+        if (!content.includes(' || IMAGE_BASE64: ')) return { text: content, image: null };
+
+        const [text, imagePart] = content.split(' || IMAGE_BASE64: ');
+        return { text, image: imagePart };
+    }
 
     // Actions
     function togglePromptPreview() {
@@ -180,6 +191,7 @@ export const useChatStore = defineStore('chat', () => {
         lastRequestData,
         lastResponseChunks,
         hasSelectedRole,
+        parseMessageContent,
         loadRoles,
         selectRole,
         togglePromptPreview,

@@ -1,10 +1,12 @@
 <template>
-  <div class="app">
-    <div class="sidebar">
+  <div class="app-container">
+    <aside class="sidebar">
       <RoleManager />
       <HistorySidebar />
-    </div>
-    <ChatContainer />
+    </aside>
+    <main class="main-content">
+      <ChatContainer />
+    </main>
   </div>
 </template>
 
@@ -23,35 +25,44 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.app {
+.app-container {
   display: flex;
+  width: 100vw;
   height: 100vh;
+  overflow: hidden;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .sidebar {
   width: 320px;
-  background: #f5f7fb;
+  flex: 0 0 320px;
+  background: #f8fafc;
   border-right: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
+  box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+  z-index: 10;
+}
+
+.main-content {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: white;
 }
 
 .sidebar > *:first-child {
   flex: 0 0 auto;
-  max-height: 50%;
+  max-height: 45%;
   overflow-y: auto;
 }
 
 .sidebar > *:last-child {
   flex: 1;
   overflow-y: auto;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  border-top: 1px solid #e2e8f0;
 }
 </style>
