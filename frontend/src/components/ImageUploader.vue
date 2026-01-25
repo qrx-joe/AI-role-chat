@@ -59,9 +59,9 @@ async function handleFileSelect(event) {
     return;
   }
 
-  // 检查文件大小（5MB）
-  if (file.size > 5 * 1024 * 1024) {
-    alert('图片大小不能超过 5MB');
+  // 检查文件大小（20MB）
+  if (file.size > 20 * 1024 * 1024) {
+    alert('图片大小不能超过 20MB');
     return;
   }
 
