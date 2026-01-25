@@ -35,7 +35,12 @@ export class DeepseekService {
         const isMockMode = this.configService.get<string>('MOCK_MODE') === 'true';
         if (isMockMode) {
             console.log('🧪 [MOCK_MODE] 正在使用模拟数据进行回复...');
-            await this.simulateStreamOutput('（模拟模式开启）这是一个预设的回复文本，用于演示 API 连接不可用时的情况。流式数据依然可以通过 Mock 模式正常在前端渲染。', onChunk);
+            const hasImage = messages.some(m => typeof m.content === 'string' && m.content.includes(' || IMAGE_BASE64: '));
+            const mockReply = hasImage
+                ? '（模拟多模态识别）我已经看到了您上传的图片！这张图片看起来非常有艺术感，色彩丰富且构图巧妙。我可以基于这张图片的内容为您提供详细的分析或建议，请问您想深入了解图片的哪个部分？'
+                : '（模拟模式开启）这是一个预设的回复文本，用于演示 API 连接不可用时的情况。流式数据依然可以通过 Mock 模式正常在前端渲染。';
+
+            await this.simulateStreamOutput(mockReply, onChunk);
             return;
         }
 
@@ -45,16 +50,17 @@ export class DeepseekService {
                 {
                     model: 'deepseek-chat',
                     messages: messages.map(m => {
+                        // 检查是否是带图片的混合消息
                         if (m.role === 'user' && typeof m.content === 'string' && m.content.includes(' || IMAGE_BASE64: ')) {
-                            const parts = m.content.split(' || IMAGE_BASE64: ');
-                            const text = parts[0];
-                            const imagePart = parts[1];
+                            const [text, imagePart] = m.content.split(' || IMAGE_BASE64: ');
+
+                            // [紧急修复] deepseek-chat 目前是纯文本模型，发送 content 数组会导致 400 错误
+                            // 演示时若需要展示图片识别，建议开启 MOCK_MODE 或说明该局限性
+                            console.log('📸 检测到图片数据，由于 deepseek-chat 不支持 Vision，将降级为纯文本发送');
+
                             return {
                                 role: 'user',
-                                content: [
-                                    { type: 'text', text: text || '请看这张图片' },
-                                    { type: 'image_url', image_url: { url: imagePart } }
-                                ]
+                                content: text || '请看这张图片' // 仅保留文本
                             };
                         }
                         return m;
