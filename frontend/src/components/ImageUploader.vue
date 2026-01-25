@@ -21,13 +21,29 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+
+const props = defineProps({
+  imageBase64: {
+    type: String,
+    default: null
+  }
+});
 
 const emit = defineEmits(['update:imageBase64']);
 
 const fileInput = ref(null);
 const imagePreview = ref(null);
-const imageBase64 = ref(null);
+
+// 监听父组件传入的值变化，当清空时同步清空预览
+watch(() => props.imageBase64, (newVal) => {
+  if (newVal === null) {
+    imagePreview.value = null;
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
+  }
+});
 
 function selectFile() {
   fileInput.value?.click();
@@ -53,7 +69,6 @@ async function handleFileSelect(event) {
     // Canvas 压缩
     const compressed = await compressImage(file);
     imagePreview.value = compressed;
-    imageBase64.value = compressed;
     emit('update:imageBase64', compressed);
   } catch (error) {
     console.error('图片压缩失败:', error);
@@ -112,7 +127,6 @@ async function compressImage(file) {
 
 function removeImage() {
   imagePreview.value = null;
-  imageBase64.value = null;
   emit('update:imageBase64', null);
   if (fileInput.value) {
     fileInput.value.value = '';
