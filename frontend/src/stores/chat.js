@@ -177,6 +177,8 @@ export const useChatStore = defineStore('chat', () => {
             });
         } finally {
             isStreaming.value = false;
+            // 自动刷新历史对话列表
+            loadConversations();
         }
     }
 
