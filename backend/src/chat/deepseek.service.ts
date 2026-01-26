@@ -55,107 +55,28 @@ export class DeepseekService {
             return;
         }
 
-        // --- 模型选择逻辑 ---
-        const hasImage = messages.some(m => {
-            if (Array.isArray(m.content)) {
-                return m.content.some(c => c.type === 'image_url');
-            }
-            return typeof m.content === 'string' && m.content.includes(' || IMAGE_BASE64: ');
-        });
-
-        const currentApiKey = hasImage ? this.zhipuApiKey : this.apiKey;
-        const currentBaseUrl = hasImage ? this.zhipuBaseUrl : this.baseUrl;
-        const currentModel = hasImage ? this.zhipuModel : 'deepseek-chat';
-        const providerName = hasImage ? '智谱 AI (Vision)' : 'DeepSeek (Chat)';
+        // --- 统一使用 DeepSeek (图片识别已在 ChatService 两阶段处理) ---
+        const currentApiKey = this.apiKey;
+        const currentBaseUrl = this.baseUrl;
+        const currentModel = 'deepseek-chat';
+        const providerName = 'DeepSeek (Chat)';
 
         // --- API Key 检查 ---
-        if (!currentApiKey || currentApiKey === 'your_api_key_here' || currentApiKey === 'your_zhipu_api_key_here') {
-            const keyName = hasImage ? '智谱 AI API Key' : 'DeepSeek API Key';
+        if (!currentApiKey || currentApiKey === 'your_api_key_here') {
             throw new HttpException(
-                `⚠️ 警告: ${keyName} 未配置，请检查环境变量或 .env 文件。`,
+                `⚠️ 警告: DeepSeek API Key 未配置，请检查环境变量或 .env 文件。`,
                 HttpStatus.BAD_REQUEST,
             );
-        }
-
-        // --- 视觉模式下清除历史消息 (防止 Token 超限) ---
-        let processedMessages = messages;
-        if (hasImage) {
-            const lastUserMessage = messages.filter(m => m.role === 'user').pop();
-
-            // 在视觉模式下，使用简洁的图片识别提示，避免复杂角色扮演导致重复
-            processedMessages = [
-                {
-                    role: 'system',
-                    content: '你是一个图片识别助手。请仔细观察用户上传的图片，用简洁、准确的中文描述图片内容。描述应包括：主要物体、场景、色彩、氛围等关键信息。避免重复相同的词语。'
-                }
-            ];
-            if (lastUserMessage) processedMessages.push(lastUserMessage);
-
-            console.log(`📸 视觉模式: 使用简化提示，仅保留 ${processedMessages.length} 条消息`);
-            console.log(`📸 最后用户消息类型: ${Array.isArray(lastUserMessage?.content) ? 'array' : typeof lastUserMessage?.content}`);
-            if (Array.isArray(lastUserMessage?.content)) {
-                console.log(`📸 消息包含元素: ${lastUserMessage.content.map(c => c.type).join(', ')}`);
-            }
         }
 
         console.log(`🚀 路由选择: [${providerName}] 使用模型: ${currentModel}`);
 
         try {
-            // 调试日志：打印最终发送的消息结构
-            const lastMsg = processedMessages[processedMessages.length - 1];
-            console.log('📤 最后一条消息结构:', JSON.stringify({
-                role: lastMsg?.role,
-                contentType: Array.isArray(lastMsg?.content) ? 'array' : typeof lastMsg?.content,
-                contentLength: Array.isArray(lastMsg?.content)
-                    ? lastMsg.content.length
-                    : (typeof lastMsg?.content === 'string' ? lastMsg.content.length : 0),
-                hasImageUrl: Array.isArray(lastMsg?.content)
-                    ? lastMsg.content.some(c => c.type === 'image_url')
-                    : false
-            }, null, 2));
             const response = await axios.post(
                 `${currentBaseUrl.endsWith('/') ? currentBaseUrl : currentBaseUrl + '/'}chat/completions`,
                 {
                     model: currentModel,
-                    messages: processedMessages.map((m, index) => {
-                        const isLastMessage = index === processedMessages.length - 1;
-
-                        // 处理数组格式的内容 (ChatService 传过来的最新消息)
-                        if (Array.isArray(m.content)) {
-                            // 如果是发给 DeepSeek (纯文本模型)，或者虽然是发给视觉模型但不是最新一条消息，则需降级
-                            // 注意：智谱 GLM-4v 要求图片只能在最新一条消息中
-                            if (!isLastMessage || (!hasImage && currentModel === 'deepseek-chat')) {
-                                return {
-                                    role: m.role,
-                                    content: m.content.find(c => c.type === 'text')?.text || '请看这张图片'
-                                };
-                            }
-                            return m; // Zhipu 支持且是最新消息，保持原样
-                        }
-
-                        // 处理带标记的字符串格式 (历史消息中的图片标记)
-                        if (typeof m.content === 'string' && m.content.includes(' || IMAGE_BASE64: ')) {
-                            const [text, imagePart] = m.content.split(' || IMAGE_BASE64: ');
-
-                            // 只有最新一条消息且在视觉模式下才还原图片
-                            if (hasImage && isLastMessage && currentModel !== 'deepseek-chat') {
-                                return {
-                                    role: 'user',
-                                    content: [
-                                        { type: 'text', text: text || '请识别这张图片内容' },
-                                        { type: 'image_url', image_url: { url: imagePart } }
-                                    ]
-                                };
-                            }
-
-                            // 历史消息或非视觉模式，强制降级为纯文本，防止 Zhipu 报错（智谱不支持历史中带图片）
-                            return {
-                                role: m.role,
-                                content: text || '请看这张图片'
-                            };
-                        }
-                        return m;
-                    }),
+                    messages: messages,  // 直接使用原始消息（图片描述已转换为文本）
                     stream: true,
                     temperature: 0.3,           // 进一步降低随机性
                     max_tokens: 512,            // 限制输出长度，防止无限重复
@@ -235,6 +156,63 @@ export class DeepseekService {
                 );
             }
             throw error;
+        }
+    }
+
+    /**
+     * 【阶段1】纯图片识别：使用 GLM-4V 获取图片的客观描述
+     * @param imageContent 图片内容数组（包含 text 和 image_url）
+     * @returns 图片描述文本
+     */
+    async identifyImageOnly(imageContent: Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string } }>): Promise<string> {
+        console.log('🔍 [阶段1] 开始纯图片识别...');
+
+        // API Key 检查
+        if (!this.zhipuApiKey || this.zhipuApiKey === 'your_zhipu_api_key_here') {
+            throw new HttpException(
+                '⚠️ 警告: 智谱 AI API Key 未配置，无法使用图片识别功能。',
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
+        try {
+            // 使用简洁的图片识别 System Prompt
+            const response = await axios.post(
+                `${this.zhipuBaseUrl.endsWith('/') ? this.zhipuBaseUrl : this.zhipuBaseUrl + '/'}chat/completions`,
+                {
+                    model: this.zhipuModel,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: '你是一个专业的图片识别助手。请用简洁、准确的中文客观描述图片内容，包括：主要物体、场景、色彩、氛围等关键信息。保持客观中立，避免主观评价。'
+                        },
+                        {
+                            role: 'user',
+                            content: imageContent
+                        }
+                    ],
+                    stream: false,  // 非流式调用
+                    temperature: 0.3,
+                    max_tokens: 300,  // 限制描述长度
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.zhipuApiKey}`,
+                    },
+                },
+            );
+
+            const description = response.data.choices?.[0]?.message?.content || '无法识别图片内容';
+            console.log(`✅ [阶段1] 图片识别完成: ${description.substring(0, 50)}...`);
+            return description;
+
+        } catch (error) {
+            console.error('❌ [阶段1] 图片识别失败:', error.response?.data || error.message);
+            throw new HttpException(
+                `图片识别失败: ${error.response?.data?.error?.message || error.message}`,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
         }
     }
 

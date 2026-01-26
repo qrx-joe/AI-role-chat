@@ -140,16 +140,26 @@ export class ChatService {
             });
         }
 
-        // 当前用户消息（支持图片）
+        // 当前用户消息（支持图片 - 两阶段处理）
         if (imageBase64) {
+            // 【阶段1】使用 GLM-4V 纯图片识别
+            console.log('📸 检测到图片，启动两阶段处理...');
+            const imageContent = [
+                { type: 'text' as const, text: userMessage || '请看这张图片' },
+                { type: 'image_url' as const, image_url: { url: imageBase64 } },
+            ];
+
+            const imageDescription = await this.deepseekService.identifyImageOnly(imageContent);
+
+            // 【阶段2】将图片描述作为文本消息，结合角色设定调用 DeepSeek
+            console.log('🎭 [阶段2] 开始角色扮演回复...');
+            const enhancedMessage = `[图片内容描述：${imageDescription}]\n\n${userMessage || '这张图片怎么样？'}`;
+
             messages.push({
                 role: 'user',
-                content: [
-                    { type: 'text', text: userMessage },
-                    { type: 'image_url', image_url: { url: imageBase64 } },
-                ],
+                content: enhancedMessage,  // 纯文本消息，包含图片描述
             });
-            await this.saveMessage(roleId, conversation.id, userMessage, MessageRole.USER, MessageType.IMAGE);
+            await this.saveMessage(roleId, conversation.id, enhancedMessage, MessageRole.USER, MessageType.IMAGE);
         } else {
             messages.push({
                 role: 'user',
@@ -158,7 +168,7 @@ export class ChatService {
             await this.saveMessage(roleId, conversation.id, userMessage, MessageRole.USER);
         }
 
-        // 5. 调用 DeepSeek 流式 API
+        // 5. 调用 DeepSeek 流式 API（图片模式下也使用 DeepSeek）
         let assistantResponse = '';
 
         await this.deepseekService.streamChat(
