@@ -86,8 +86,8 @@ async function compressImage(file) {
         let width = img.width;
         let height = img.height;
 
-        // 🎯 限制最大尺寸 (优化 Token: 384px 足够视觉识别，且确保 Token 不超限)
-        const maxSize = 384;
+        // 🎯 限制最大尺寸 (优化 Token: 256px 确保不超限)
+        const maxSize = 256;
         if (width > maxSize || height > maxSize) {
           if (width > height) {
             height = (height / width) * maxSize;
@@ -104,12 +104,12 @@ async function compressImage(file) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // 🎯 压缩质量 (优化 Token: 从 0.5 开始，更激进)
-        let quality = 0.5;
+        // 🎯 压缩质量 (优化 Token: 从 0.4 开始)
+        let quality = 0.4;
         let result = canvas.toDataURL('image/jpeg', quality);
 
-        // 🎯 如果还是太大 (>100KB)，继续压缩
-        while (result.length > 100 * 1024 && quality > 0.2) {
+        // 🎯 如果还是太大 (>50KB)，继续压缩
+        while (result.length > 50 * 1024 && quality > 0.1) {
           quality -= 0.1;
           result = canvas.toDataURL('image/jpeg', quality);
         }
