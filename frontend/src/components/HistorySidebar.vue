@@ -28,12 +28,8 @@
               class="conv-content"
               @click="chatStore.selectConversation(conv)"
             >
-              <div class="conv-info">
-                <span class="time">{{ formatTime(conv.updatedAt) }}</span>
-              </div>
-              <div class="last-message" v-if="conv.messages && conv.messages.length">
-                {{ conv.messages[conv.messages.length - 1].content }}
-              </div>
+              <div class="conv-title">{{ conv.title || '未命名对话' }}</div>
+              <div class="conv-time">{{ formatTime(conv.updatedAt) }}</div>
             </div>
             <button 
               class="btn-delete" 
@@ -219,26 +215,23 @@ async function handleDelete(conversation) {
   transform: scale(1.1);
 }
 
-.conv-info {
-  display: flex;
+.conv-title {
+  font-weight: 500;
+  font-size: 13px;
+  color: #333;
   margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.role-name {
-  font-weight: bold;
-  font-size: 14px;
+.conv-time {
+  font-size: 11px;
+  color: #999;
 }
 
 .time {
   font-size: 12px;
   color: #999;
-}
-
-.last-message {
-  font-size: 12px;
-  color: #666;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>

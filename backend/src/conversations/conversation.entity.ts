@@ -18,6 +18,9 @@ export class Conversation {
     @Column({ nullable: true })
     userId: string;
 
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    title: string;
+
     @Column({
         type: 'text',
         default: ConversationStatus.ACTIVE,

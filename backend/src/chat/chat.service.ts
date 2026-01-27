@@ -50,7 +50,12 @@ export class ChatService {
     /**
      * 获取或创建会话
      */
-    private async getOrCreateConversation(roleId: string, conversationId?: string): Promise<Conversation> {
+    private async getOrCreateConversation(
+        roleId: string,
+        conversationId?: string,
+        userMessage?: string,
+        imageBase64?: string | null
+    ): Promise<Conversation> {
         if (conversationId) {
             const conversation = await this.conversationsRepository.findOne({
                 where: { id: conversationId, roleId },
@@ -60,12 +65,34 @@ export class ChatService {
             }
         }
 
-        // 创建新会话
+        // 创建新会话时生成主题
+        const title = this.generateTitle(userMessage || '', imageBase64 || null);
+
         const conversation = this.conversationsRepository.create({
             roleId,
+            title,
             status: ConversationStatus.ACTIVE,
         });
         return await this.conversationsRepository.save(conversation);
+    }
+
+    /**
+     * 生成对话主题
+     */
+    private generateTitle(message: string, imageBase64: string | null): string {
+        if (imageBase64) {
+            return '图片对话';
+        }
+
+        // 移除图片描述标记
+        const cleanText = message.replace(/\[图片内容描述：.*?\]\n\n/g, '');
+
+        // 截取前 20 个字符
+        if (cleanText.length > 20) {
+            return cleanText.substring(0, 20) + '...';
+        }
+
+        return cleanText || '新对话';
     }
 
     /**
@@ -116,8 +143,8 @@ export class ChatService {
             throw new Error('角色不存在');
         }
 
-        // 2. 获取或创建会话
-        const conversation = await this.getOrCreateConversation(roleId, conversationId || undefined);
+        // 2. 获取或创建会话（传入消息和图片信息用于生成主题）
+        const conversation = await this.getOrCreateConversation(roleId, conversationId || undefined, userMessage, imageBase64);
 
         // 3. 获取历史消息
         const recentMessages = await this.getRecentMessages(conversation.id);
