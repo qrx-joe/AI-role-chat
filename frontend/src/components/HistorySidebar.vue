@@ -23,14 +23,25 @@
             :key="conv.id"
             class="conversation-item"
             :class="{ active: chatStore.currentConversationId === conv.id }"
-            @click="chatStore.selectConversation(conv)"
           >
-            <div class="conv-info">
-              <span class="time">{{ formatTime(conv.updatedAt) }}</span>
+            <div 
+              class="conv-content"
+              @click="chatStore.selectConversation(conv)"
+            >
+              <div class="conv-info">
+                <span class="time">{{ formatTime(conv.updatedAt) }}</span>
+              </div>
+              <div class="last-message" v-if="conv.messages && conv.messages.length">
+                {{ conv.messages[conv.messages.length - 1].content }}
+              </div>
             </div>
-            <div class="last-message" v-if="conv.messages && conv.messages.length">
-              {{ conv.messages[conv.messages.length - 1].content }}
-            </div>
+            <button 
+              class="btn-delete" 
+              @click.stop="handleDelete(conv)"
+              title="删除对话"
+            >
+              🗑️
+            </button>
           </div>
         </div>
       </div>
@@ -80,6 +91,19 @@ onMounted(() => {
 function formatTime(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+async function handleDelete(conversation) {
+  const roleName = conversation.role?.name || '未知角色';
+  const confirmed = confirm(`确定要删除与"${roleName}"的这段对话吗？\n此操作不可恢复！`);
+  
+  if (confirmed) {
+    try {
+      await chatStore.deleteConversation(conversation.id);
+    } catch (error) {
+      alert('删除失败，请重试');
+    }
+  }
 }
 </script>
 
@@ -145,10 +169,12 @@ function formatTime(dateStr) {
 }
 
 .conversation-item {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
   padding: 12px;
   border-radius: 10px;
   background: #f9f9f9;
-  cursor: pointer;
   transition: all 0.2s;
   border: 1px solid transparent;
 }
@@ -160,6 +186,37 @@ function formatTime(dateStr) {
 .conversation-item.active {
   background: #eef2ff;
   border-color: #667eea;
+}
+
+.conv-content {
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.btn-delete {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.conversation-item:hover .btn-delete {
+  opacity: 1;
+}
+
+.btn-delete:hover {
+  background: #fee;
+  transform: scale(1.1);
 }
 
 .conv-info {

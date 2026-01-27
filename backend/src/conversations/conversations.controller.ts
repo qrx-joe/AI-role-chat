@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Delete, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 
 @Controller('api/conversations')
@@ -22,6 +22,17 @@ export class ConversationsController {
             code: 200,
             message: '获取消息记录成功',
             data: messages,
+        };
+    }
+
+    @Delete(':id')
+    @HttpCode(HttpStatus.OK)
+    async remove(@Param('id') id: string) {
+        await this.conversationsService.remove(id);
+        return {
+            code: 200,
+            message: '删除对话成功',
+            data: null,
         };
     }
 }

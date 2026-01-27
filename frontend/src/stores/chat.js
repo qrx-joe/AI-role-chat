@@ -113,6 +113,27 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
+    async function deleteConversation(conversationId) {
+        try {
+            await conversationApi.delete(conversationId);
+
+            // 从列表中移除
+            const index = conversations.value.findIndex(c => c.id === conversationId);
+            if (index !== -1) {
+                conversations.value.splice(index, 1);
+            }
+
+            // 如果删除的是当前对话，清空相关状态
+            if (currentConversationId.value === conversationId) {
+                currentConversationId.value = null;
+                messages.value = [];
+            }
+        } catch (error) {
+            console.error('删除对话失败:', error);
+            throw error;
+        }
+    }
+
     async function sendMessage(text, imageBase64 = null) {
         if (!currentRole.value || isStreaming.value) return;
 
@@ -200,6 +221,7 @@ export const useChatStore = defineStore('chat', () => {
         togglePromptPreview,
         loadConversations,
         selectConversation,
+        deleteConversation,
         createRole,
         updateRole,
         deleteRole,

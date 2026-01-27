@@ -30,6 +30,7 @@ export const roleApi = {
 export const conversationApi = {
     getAll: () => apiClient.get('/conversations'),
     getMessages: (id) => apiClient.get(`/conversations/${id}/messages`),
+    delete: (id) => apiClient.delete(`/conversations/${id}`),
 };
 
 // 已移除废弃的 chatApi，流式对话直接在 store 中使用 fetch 实现
