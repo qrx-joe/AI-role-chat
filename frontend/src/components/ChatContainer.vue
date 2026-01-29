@@ -9,7 +9,7 @@
     <div v-else class="chat-main">
       <header class="chat-header">
         <div class="role-info">
-          <span class="role-badge">{{ chatStore.currentRole.personality }}</span>
+          <!-- <span class="role-badge">{{ chatStore.currentRole.personality }}</span> -->
           <h2>{{ chatStore.currentRole.name }}</h2>
         </div>
         <div class="header-actions">

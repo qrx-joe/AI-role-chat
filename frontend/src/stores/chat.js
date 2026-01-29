@@ -71,6 +71,12 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
+    function startNewChat() {
+        currentConversationId.value = null;
+        messages.value = [];
+    }
+
+
     async function createRole(roleData) {
         try {
             const response = await roleApi.create(roleData);
@@ -226,5 +232,6 @@ export const useChatStore = defineStore('chat', () => {
         updateRole,
         deleteRole,
         sendMessage,
+        startNewChat,
     };
 });

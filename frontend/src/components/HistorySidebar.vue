@@ -2,7 +2,10 @@
   <div class="history-sidebar">
     <div class="header">
       <h3>历史对话</h3>
-      <button class="btn-refresh" @click="chatStore.loadConversations">🔄</button>
+      <div class="header-actions">
+        <button class="btn-new-chat" @click="chatStore.startNewChat" title="开始新对话">+</button>
+        <button class="btn-refresh" @click="chatStore.loadConversations" title="刷新列表">🔄</button>
+      </div>
     </div>
     
     <div class="conversation-list">
@@ -133,6 +136,12 @@ async function handleDelete(conversation) {
   color: var(--text-muted);
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-new-chat,
 .btn-refresh {
   background: transparent;
   border: 1px solid var(--border-subtle);
@@ -148,12 +157,17 @@ async function handleDelete(conversation) {
   color: var(--text-muted);
 }
 
+.btn-new-chat:hover,
 .btn-refresh:hover {
   background: var(--surface-hover);
   color: var(--primary);
   border-color: var(--primary-glow);
+}
+
+.btn-refresh:hover {
   transform: rotate(180deg);
 }
+
 
 .conversation-list {
   flex: 1;
@@ -174,11 +188,11 @@ async function handleDelete(conversation) {
   gap: 8px;
   padding: 0 12px;
   margin-bottom: 12px;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 0.75rem;
+  font-family: var(--font-heading); /* Changed to heading font for better look */
+  font-weight: 700;
+  font-size: 1rem; /* Increased from 0.75rem */
   color: var(--primary);
-  opacity: 0.8;
+  opacity: 1; /* Increased visibility */
 }
 
 .count {
