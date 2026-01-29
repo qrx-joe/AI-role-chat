@@ -54,8 +54,14 @@ const chatStore = useChatStore();
 // 按角色分组对话
 const groupedConversations = computed(() => {
   const groups = {};
+  const currentRoleId = chatStore.currentRole?.id;
   
   chatStore.conversations.forEach(conv => {
+    // 过滤：如果已选中角色，只显示该角色的对话
+    if (currentRoleId && conv.role?.id !== currentRoleId) {
+      return;
+    }
+
     const roleId = conv.role?.id || 'unknown';
     const roleName = conv.role?.name || '未知角色';
     

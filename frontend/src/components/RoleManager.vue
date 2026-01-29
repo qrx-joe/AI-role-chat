@@ -1,11 +1,39 @@
 <template>
-  <div class="role-manager">
-    <div class="header">
-      <h2>AI 角色</h2>
-      <button class="btn-create" @click="openCreateDialog">+ 创建角色</button>
+  <div 
+    class="role-manager" 
+    :class="{ 
+      'is-compact': compact,
+      'is-grid': grid 
+    }"
+  >
+    <!-- Header: Hidden in Grid Mode (handled by App.vue), Visible in Normal/Compact -->
+    <div class="header" v-if="!grid">
+      <h2 v-if="!compact">AI 角色</h2>
+      <button v-if="compact" class="btn-back" @click="chatStore.selectRole(null)">
+        ← 返回角色列表
+      </button>
+      <button v-else class="btn-create" @click="openCreateDialog">+ 创建角色</button>
     </div>
 
-    <div class="role-list">
+    <!-- Compact Mode: Only show active role -->
+    <div v-if="compact" class="active-role-display">
+       <div class="role-card active-static">
+          <h3>{{ chatStore.currentRole?.name }}</h3>
+          <div class="card-actions-static">
+            <button class="btn-icon" @click.stop="openEditDialog(chatStore.currentRole)" title="编辑">📝</button>
+          </div>
+       </div>
+    </div>
+
+    <!-- Grid Mode & List Mode -->
+    <div v-else class="role-list" :class="{ 'grid-view': grid }">
+      <!-- Create Button Card (Only in Grid Mode) -->
+      <div v-if="grid" class="role-card create-card" @click="openCreateDialog">
+        <div class="create-icon">+</div>
+        <h3>创建新角色</h3>
+        <p class="create-desc">设计属于你的 AI 伙伴</p>
+      </div>
+
       <div
         v-for="role in chatStore.roles"
         :key="role.id"
@@ -14,7 +42,7 @@
         @click="chatStore.selectRole(role)"
       >
         <h3>{{ role.name }}</h3>
-        <p class="personality">{{ role.personality }}</p>
+        <!-- <p class="personality">{{ role.personality }}</p> 用户要求隐藏 -->
         <div class="card-actions">
           <button class="btn-edit" @click.stop="openEditDialog(role)" title="编辑角色">📝</button>
           <button class="btn-delete" @click.stop="handleDelete(role.id)" title="删除角色">🗑️</button>
@@ -22,15 +50,30 @@
       </div>
     </div>
 
-    <!-- 创建/编辑角色弹窗 -->
+    <!-- 创建/编辑角色弹窗 (不变) -->
     <div v-if="showDialog" class="dialog-overlay" @click="closeDialog">
       <div class="dialog" @click.stop>
         <h3>{{ isEditing ? '编辑角色' : '创建新角色' }}</h3>
-        <input v-model="roleForm.name" placeholder="角色名称" />
-        <textarea v-model="roleForm.personality" placeholder="性格特征（如：毒舌、温柔、严谨）" rows="2"></textarea>
-        <textarea v-model="roleForm.background" placeholder="背景故事" rows="3"></textarea>
-        <textarea v-model="roleForm.constraints" placeholder="行为约束（可选）" rows="2"></textarea>
-        <textarea v-model="roleForm.examples" placeholder="对话示例（可选）" rows="3"></textarea>
+        <div class="form-group">
+            <span class="form-label">角色名称</span>
+            <input v-model="roleForm.name" placeholder="给你的 AI 起个名字" />
+        </div>
+        <div class="form-group">
+            <span class="form-label">性格特征</span>
+            <textarea v-model="roleForm.personality" placeholder="如：毒舌、温柔、严谨..." rows="2"></textarea>
+        </div>
+        <div class="form-group">
+            <span class="form-label">背景故事</span>
+             <textarea v-model="roleForm.background" placeholder="它来自哪里？有什么故事？" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+            <span class="form-label optional">行为约束</span>
+            <textarea v-model="roleForm.constraints" placeholder="有什么是它绝对不能做的？" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+            <span class="form-label optional">对话示例</span>
+             <textarea v-model="roleForm.examples" placeholder="用户：你好 AI：..." rows="3"></textarea>
+        </div>
         <div class="dialog-actions">
           <button @click="closeDialog">取消</button>
           <button @click="handleSubmit" class="btn-primary">{{ isEditing ? '保存修改' : '立即创建' }}</button>
@@ -41,8 +84,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, defineProps } from 'vue';
 import { useChatStore } from '../stores/chat';
+
+const props = defineProps({
+  compact: {
+    type: Boolean,
+    default: false
+  },
+  grid: {
+    type: Boolean,
+    default: false
+  }
+});
 
 const chatStore = useChatStore();
 const showDialog = ref(false);
@@ -100,10 +154,20 @@ async function handleDelete(roleId) {
 </script>
 
 <style scoped>
-.role-manager {
+.role-manager.is-compact {
+  padding: 12px 16px; 
+}
+
+.role-manager:not(.is-compact):not(.is-grid) {
   padding: 24px;
 }
 
+.role-manager.is-grid {
+  width: 100%;
+  padding: 0; /* Grid view doesn't need container padding */
+}
+
+/* Header Logic */
 .header {
   display: flex;
   justify-content: space-between;
@@ -111,6 +175,34 @@ async function handleDelete(roleId) {
   margin-bottom: 24px;
 }
 
+.role-manager.is-compact .header {
+  margin-bottom: 0px; 
+}
+
+.btn-back {
+  background: transparent;
+  border: none;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.btn-back:hover {
+  color: var(--primary);
+}
+
+.active-role-display {
+  display: none; 
+}
+
+/* ... existing styles for list mode ... */
 .header h2 {
   font-family: var(--font-heading);
   font-size: 1.5rem;
@@ -149,6 +241,14 @@ async function handleDelete(roleId) {
   gap: 16px;
 }
 
+/* --- Grid View Override --- */
+.role-list.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
 .role-card {
   background: hsla(255, 100%, 100%, 0.3);
   padding: 20px;
@@ -161,6 +261,64 @@ async function handleDelete(roleId) {
   overflow: hidden;
 }
 
+/* Specific styles for Grid Cards */
+.grid-view .role-card {
+  height: 240px; /* Taller cards */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.grid-view .role-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+}
+
+.grid-view .role-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+}
+
+.grid-view .personality {
+  font-size: 0.95rem;
+  -webkit-line-clamp: 3;
+}
+
+/* Create Card in Grid */
+.create-card {
+  border: 2px dashed var(--border-subtle);
+  background: rgba(255,255,255,0.2) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.create-card:hover {
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.4) !important;
+}
+
+.create-icon {
+  font-size: 3rem;
+  color: var(--primary);
+  opacity: 0.8;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.create-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Keep existing list styles for sidebar mode */
 .role-card::before {
   content: '';
   position: absolute;
@@ -174,6 +332,9 @@ async function handleDelete(roleId) {
 }
 
 .role-card:hover {
+  /* Only apply translateY if NOT in grid view (handled above) */
+}
+.role-list:not(.grid-view) .role-card:hover { 
   transform: translateY(-3px) scale(1.01);
   background: hsla(255, 100%, 100%, 0.5);
   box-shadow: var(--shadow-md);
@@ -261,8 +422,8 @@ async function handleDelete(roleId) {
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: hsla(240, 20%, 5%, 0.4); /* 深色遮罩 */
-  backdrop-filter: blur(12px); /* 模糊背景 */
+  background: hsla(240, 20%, 5%, 0.4); 
+  backdrop-filter: blur(12px); 
   display: flex;
   align-items: center;
   justify-content: center;
@@ -273,7 +434,7 @@ async function handleDelete(roleId) {
 .dialog {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
-  padding: 32px 40px; /* 增加内边距 */
+  padding: 32px 40px; 
   border-radius: 24px;
   width: 580px;
   max-width: 90vw;
