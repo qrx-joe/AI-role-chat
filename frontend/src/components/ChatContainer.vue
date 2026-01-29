@@ -70,7 +70,10 @@
           :disabled="(!inputText.trim() && !uploadedImage) || chatStore.isStreaming" 
           class="send-btn"
         >
-          {{ chatStore.isStreaming ? '⚡' : '🚀' }}
+          <!-- 发送图标 -->
+          <svg v-if="!chatStore.isStreaming" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          <!-- 正在生成图标 (闪电/正在运行) -->
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
         </button>
       </div>
     </div>
