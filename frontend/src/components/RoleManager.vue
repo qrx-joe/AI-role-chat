@@ -106,7 +106,7 @@
     <div v-if="showDialog" class="dialog-overlay" @click="closeDialog">
       <div class="dialog" @click.stop>
         <div class="dialog-content">
-          <h3>{{ isEditing ? '编辑角色' : '创建新角色' }}</h3>
+          <h3>{{ roleForm.name || (isEditing ? '编辑角色' : '创建新角色') }}</h3>
           
           <!-- Avatar Section -->
           <div class="avatar-section">
