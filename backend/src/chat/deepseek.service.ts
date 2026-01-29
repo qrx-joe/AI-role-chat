@@ -129,9 +129,49 @@ export class DeepseekService {
     }
 
     /**
-     * 调用 DeepSeek 流式 API
-     * @param messages 对话消息数组
-     * @param onChunk 流式数据回调函数
+     * 流式对话方法【核心功能】
+     * 
+     * 这是与AI进行对话的核心方法，支持Server-Sent Events (SSE)流式输出。
+     * 统一使用 DeepSeek 模型进行文本对话。
+     * 
+     * ## 工作流程
+     * 
+     * 1. **Mock模式检查** - 如果启用Mock模式，使用模拟数据返回
+     * 2. **API Key验证** - 检查DeepSeek API Key是否配置
+     * 3. **发送请求** - 调用DeepSeek API，开启流式模式
+     * 4. **处理响应** - 逐块接收AI回复，通过回调函数实时返回
+     * 5. **错误处理** - 捕获并处理各种异常情况
+     * 
+     * ## 重要说明
+     * 
+     * - 图片识别已在 ChatService 中通过两阶段处理完成
+     * - 传入的 messages 已经是纯文本格式（图片描述已嵌入）
+     * - 响应采用流式处理，实时返回AI生成的内容
+     * 
+     * @param messages - 对话消息数组，包含system、user、assistant角色的消息
+     * @param onChunk - 流式数据回调函数，每接收到一个文本片段就调用一次
+     * @param onError - 错误回调函数，当发生错误时调用
+     * @returns {Promise<void>} 异步完成，无返回值
+     * 
+     * @throws {HttpException} 当API Key未配置时抛出400错误
+     * @throws {HttpException} 当API调用失败时抛出对应的HTTP错误
+     * 
+     * @example
+     * ```typescript
+     * // 使用示例
+     * await deepseekService.streamChat(
+     *   [
+     *     { role: 'system', content: '你是一个友好的助手' },
+     *     { role: 'user', content: '你好，请介绍一下自己' }
+     *   ],
+     *   (chunk) => {
+     *     console.log('接收到:', chunk); // 实时输出AI回复片段
+     *   },
+     *   (error) => {
+     *     console.error('错误:', error);
+     *   }
+     * );
+     * ```
      */
     async streamChat(
         messages: ChatMessage[],
@@ -256,9 +296,49 @@ export class DeepseekService {
     }
 
     /**
-     * 【阶段1】纯图片识别：使用 GLM-4V 获取图片的客观描述
-     * @param imageContent 图片内容数组（包含 text 和 image_url）
-     * @returns 图片描述文本
+     * 纯图片识别方法【两阶段处理的第一阶段】
+     * 
+     * 使用智谱 GLM-4V 模型进行纯粹的图片内容识别，不涉及角色扮演。
+     * 这是两阶段图片处理流程的第一步，专注于获取客观的图片描述。
+     * 
+     * ## 设计理念
+     * 
+     * 将图片识别和角色扮演分离的原因：
+     * - 避免角色性格影响图片识别的准确性
+     * - 避免图片识别任务稀释角色性格表现
+     * - 让每个模型专注做自己擅长的事情
+     * 
+     * ## 工作流程
+     * 
+     * 1. **验证API Key** - 检查智谱AI的API Key是否配置
+     * 2. **构建请求** - 使用客观中立的System Prompt
+     * 3. **调用API** - 非流式调用，等待完整结果
+     * 4. **返回描述** - 提取并返回图片描述文本
+     * 
+     * @param imageContent - 图片内容数组，包含用户文本和图片URL
+     * @param imageContent[].type - 内容类型：'text' | 'image_url'
+     * @param imageContent[].text - 文本内容（当type为'text'时）
+     * @param imageContent[].image_url - 图片URL对象（当type为'image_url'时）
+     * @param imageContent[].image_url.url - 图片的Base64编码URL
+     * @returns {Promise<string>} 图片的客观描述文本
+     * 
+     * @throws {HttpException} 当智谱API Key未配置时抛出400错误
+     * @throws {HttpException} 当图片识别失败时抛出500错误
+     * 
+     * @example
+     * ```typescript
+     * // 使用示例
+     * const imageDescription = await deepseekService.identifyImageOnly([
+     *   { type: 'text', text: '请看这张图片' },
+     *   { 
+     *     type: 'image_url', 
+     *     image_url: { url: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...' } 
+     *   }
+     * ]);
+     * 
+     * console.log(imageDescription);
+     * // 输出: "一张城市夜景照片，画面中可见高楼大厦的灯光..."
+     * ```
      */
     async identifyImageOnly(imageContent: Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string } }>): Promise<string> {
         console.log('🔍 [阶段1] 开始纯图片识别...');
