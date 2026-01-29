@@ -25,22 +25,21 @@
        </div>
     </div>
 
+    <!-- Top Right Floating User Profile -->
+    <div v-if="grid" class="user-profile-widget" @click="openUserAvatarDialog" title="设置我的头像">
+      <div class="widget-avatar">
+        <img :src="chatStore.userAvatar" alt="User" />
+      </div>
+      <span class="widget-label">我的形象</span>
+    </div>
+
     <!-- Grid Mode & List Mode -->
-    <div v-else class="role-list" :class="{ 'grid-view': grid }">
+    <div v-if="!compact" class="role-list" :class="{ 'grid-view': grid }">
       <!-- Create Button Card (Only in Grid Mode) -->
       <div v-if="grid" class="role-card create-card" @click="openCreateDialog">
         <div class="create-icon">+</div>
         <h3>创建新角色</h3>
         <p class="create-desc">设计属于你的 AI 伙伴</p>
-      </div>
-
-       <!-- User Avatar Setting Card (Only in Grid Mode) -->
-      <div v-if="grid" class="role-card user-card" @click="openUserAvatarDialog">
-        <div class="user-avatar-wrapper">
-           <img :src="chatStore.userAvatar" alt="User Avatar" />
-        </div>
-        <h3>我的头像</h3>
-        <p class="create-desc">点击设置用户形象</p>
       </div>
 
       <div
@@ -49,7 +48,6 @@
         class="role-card"
         :class="{ active: chatStore.currentRole?.id === role.id }"
         @click="chatStore.selectRole(role)"
-      >
       >
         <img 
           :src="getAvatarUrl(role)" 
@@ -506,6 +504,57 @@ function getInitials(name) {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* User Card Utility replacement: Floating Widget */
+.user-profile-widget {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px 8px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 40px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.user-profile-widget:hover {
+  transform: translateY(-2px);
+  background: white;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  border-color: var(--primary-glow);
+}
+
+.widget-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.widget-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.widget-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background: linear-gradient(135deg, var(--text-main), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Keep existing list styles for sidebar mode */
