@@ -48,69 +48,92 @@ const generatedPrompt = computed(() => {
 <style scoped>
 .prompt-preview-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: hsla(220, 30%, 5%, 0.4);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
 }
 
 .prompt-preview-modal {
-  background: white;
-  width: 600px;
+  background: var(--surface);
+  width: 640px;
   max-width: 90vw;
   max-height: 80vh;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
 }
 
 .modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #eee;
+  padding: 24px;
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: linear-gradient(to right, hsla(235, 85%, 65%, 0.05), transparent);
+}
+
+.modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
 }
 
 .info-alert {
-  background: #eef2ff;
-  color: #4338ca;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 15px;
-  font-size: 14px;
+  background: var(--primary-glow);
+  color: var(--primary);
+  padding: 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid hsla(235, 85%, 65%, 0.2);
 }
 
 .prompt-content {
-  background: #f8fafc;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  background: white;
+  padding: 24px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid #e2e8f0;
   white-space: pre-wrap;
   word-break: break-all;
-  font-family: 'Fira Code', monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #1e293b;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--text-main);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .btn-close {
-  background: none;
-  border: none;
-  font-size: 20px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+  transform: rotate(90deg);
 }
 </style>

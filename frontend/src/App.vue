@@ -30,19 +30,24 @@ onMounted(() => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg-app);
+  padding: 12px; /* 给边框留出一点呼吸空间 */
+  gap: 12px;
 }
 
 .sidebar {
   width: 320px;
   flex: 0 0 320px;
-  background: #f8fafc;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   height: 100%;
-  box-shadow: 4px 0 15px rgba(0,0,0,0.05);
-  z-index: 10;
+  overflow: hidden;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .main-content {
@@ -51,18 +56,25 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: white;
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: fadeIn 0.8s ease-out;
 }
 
 .sidebar > *:first-child {
   flex: 0 0 auto;
-  max-height: 45%;
+  max-height: 50%;
   overflow-y: auto;
 }
 
 .sidebar > *:last-child {
   flex: 1;
   overflow-y: auto;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--glass-border);
 }
 </style>

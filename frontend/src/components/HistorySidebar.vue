@@ -108,22 +108,40 @@ async function handleDelete(conversation) {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-top: 1px solid #eee;
-  padding: 20px;
+  padding: 24px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  opacity: 0.9;
 }
 
 .btn-refresh {
-  background: none;
-  border: none;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
   cursor: pointer;
-  font-size: 16px;
+  font-size: 0.875rem;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-refresh:hover {
+  background: var(--glass-border);
+  transform: rotate(180deg);
 }
 
 .conversation-list {
@@ -131,29 +149,31 @@ async function handleDelete(conversation) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
 }
 
 .role-group {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .role-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
+  padding: 6px 10px;
+  background: var(--glass);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
 }
 
 .count {
-  font-size: 12px;
-  color: #999;
+  font-size: 0.75rem;
+  opacity: 0.6;
   font-weight: normal;
 }
 
@@ -161,27 +181,32 @@ async function handleDelete(conversation) {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-left: 8px;
+  padding-left: 4px;
 }
 
 .conversation-item {
   display: flex;
-  align-items: stretch;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
   padding: 12px;
-  border-radius: 10px;
-  background: #f9f9f9;
-  transition: all 0.2s;
-  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  animation: fadeIn 0.4s ease-out;
 }
 
 .conversation-item:hover {
-  background: #f0f0f0;
+  background: var(--surface-hover);
+  transform: translateX(4px);
+  border-color: var(--primary-glow);
 }
 
 .conversation-item.active {
-  background: #eef2ff;
-  border-color: #667eea;
+  background: var(--surface-active);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
 
 .conv-content {
@@ -197,8 +222,8 @@ async function handleDelete(conversation) {
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 16px;
-  border-radius: 6px;
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
   opacity: 0;
   transition: all 0.2s;
   display: flex;
@@ -207,31 +232,28 @@ async function handleDelete(conversation) {
 }
 
 .conversation-item:hover .btn-delete {
-  opacity: 1;
+  opacity: 0.6;
 }
 
 .btn-delete:hover {
-  background: #fee;
-  transform: scale(1.1);
+  opacity: 1 !important;
+  background: hsla(0, 100%, 50%, 0.1);
+  color: #ef4444;
 }
 
 .conv-title {
-  font-weight: 500;
-  font-size: 13px;
-  color: #333;
-  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .conv-time {
-  font-size: 11px;
-  color: #999;
-}
-
-.time {
-  font-size: 12px;
-  color: #999;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 </style>

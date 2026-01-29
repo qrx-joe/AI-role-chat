@@ -16,8 +16,8 @@
         <h3>{{ role.name }}</h3>
         <p class="personality">{{ role.personality }}</p>
         <div class="card-actions">
-          <button class="btn-edit" @click.stop="openEditDialog(role)">编辑</button>
-          <button class="btn-delete" @click.stop="handleDelete(role.id)">删除</button>
+          <button class="btn-edit" @click.stop="openEditDialog(role)" title="编辑角色">📝</button>
+          <button class="btn-delete" @click.stop="handleDelete(role.id)" title="删除角色">🗑️</button>
         </div>
       </div>
     </div>
@@ -101,140 +101,221 @@ async function handleDelete(roleId) {
 
 <style scoped>
 .role-manager {
-  padding: 20px;
+  padding: 24px;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .btn-create {
-  background: #667eea;
-  color: white;
+  background: var(--primary);
+  color: var(--text-on-primary);
   border: none;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.btn-create:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 16px var(--primary-glow);
 }
 
 .role-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .role-card {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
+  background: var(--surface);
+  padding: 20px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.3s;
+  border: 1px solid var(--glass-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  box-shadow: var(--shadow-sm);
+  animation: fadeIn 0.5s ease-out;
 }
 
 .role-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-glow);
 }
 
 .role-card.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea15, #764ba215);
+  background: var(--surface-active);
+  border: 2px solid var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.role-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  color: var(--text-main);
 }
 
 .personality {
-  color: #666;
-  font-size: 14px;
-  margin: 8px 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card-actions {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   display: flex;
   gap: 8px;
   opacity: 0;
-  transition: opacity 0.3s;
+  transform: translateX(10px);
+  transition: all 0.3s ease;
 }
 
 .role-card:hover .card-actions {
   opacity: 1;
+  transform: translateX(0);
 }
 
 .btn-edit, .btn-delete {
-  padding: 4px 12px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  color: white;
+  font-size: 1rem;
+  transition: all 0.2s;
 }
 
 .btn-edit {
-  background: #667eea;
+  background: whitesmoke;
+  color: var(--primary);
+}
+
+.btn-edit:hover {
+  background: var(--primary);
+  color: white;
 }
 
 .btn-delete {
-  background: #ff4444;
+  background: whitesmoke;
+  color: #ef4444;
+}
+
+.btn-delete:hover {
+  background: #ef4444;
+  color: white;
 }
 
 .dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: hsla(220, 30%, 5%, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .dialog {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  width: 500px;
-  max-width: 90vw;
+  background: var(--surface);
+  padding: 32px;
+  border-radius: var(--radius-lg);
+  width: 560px;
+  max-width: 95vw;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--glass-border);
 }
 
 .dialog h3 {
-  margin-bottom: 16px;
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+  color: var(--text-main);
 }
 
 .dialog input,
 .dialog textarea {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md);
   font-family: inherit;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: white;
+}
+
+.dialog input:focus,
+.dialog textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 .dialog-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 24px;
 }
 
 .dialog-actions button {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.dialog-actions button:not(.btn-primary) {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.dialog-actions button:not(.btn-primary):hover {
+  background: #e2e8f0;
 }
 
 .btn-primary {
-  background: #667eea;
+  background: var(--primary);
   color: white;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 </style>

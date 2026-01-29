@@ -58,66 +58,94 @@ const showState = ref(false);
 <style scoped>
 .debug-panel {
   position: absolute;
-  top: 70px;
-  right: 20px;
-  width: 350px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-  border: 1px solid #eee;
+  top: 80px;
+  right: 24px;
+  width: 380px;
+  background: hsla(220, 40%, 10%, 0.75);
+  backdrop-filter: blur(24px);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  border: 1px solid hsla(0, 0%, 100%, 0.15);
   z-index: 100;
   display: flex;
   flex-direction: column;
-  max-height: calc(100% - 90px);
+  max-height: calc(100% - 120px);
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
 }
 
 .debug-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
+  padding: 16px 20px;
+  border-bottom: 1px solid hsla(0, 0%, 100%, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fcfcfc;
-  border-radius: 16px 16px 0 0;
+}
+
+.debug-header h3 {
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
 }
 
 .debug-content {
-  padding: 15px;
+  padding: 16px;
   overflow-y: auto;
 }
 
 .debug-section {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .debug-section h4 {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 8px;
+  font-size: 0.75rem;
+  color: hsla(0, 0%, 100%, 0.5);
+  margin-bottom: 10px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: color 0.2s;
+}
+
+.debug-section h4:hover {
+  color: var(--primary);
 }
 
 .json-block {
-  background: #2d3436;
-  color: #fab1a0;
-  padding: 10px;
-  border-radius: 8px;
+  background: hsla(0, 0%, 0%, 0.3);
+  color: #a5d6ff;
+  padding: 12px;
+  border-radius: var(--radius-sm);
   font-size: 11px;
   overflow-x: auto;
-  font-family: monospace;
+  font-family: 'Fira Code', monospace;
+  border: 1px solid hsla(0, 0%, 100%, 0.05);
+  line-height: 1.5;
 }
 
 .json-block.mini {
-  margin-bottom: 5px;
-  padding: 6px;
-  color: #55efc4;
+  margin-bottom: 6px;
+  padding: 8px;
+  color: #7ee787;
 }
 
 .btn-close {
-  background: none;
+  background: hsla(0, 0%, 100%, 0.1);
   border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: white;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: #ef4444;
 }
 </style>

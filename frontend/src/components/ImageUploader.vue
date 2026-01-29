@@ -136,65 +136,80 @@ function removeImage() {
 
 <style scoped>
 .image-uploader {
-  display: inline-block;
+  display: flex;
+  align-items: center;
 }
 
 .upload-area {
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: 1px dashed #ddd;
-  border-radius: 8px;
+  justify-content: center;
+  background: var(--glass);
+  border: 1.5px solid var(--glass-border);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--text-muted);
 }
 
 .upload-area:hover {
-  border-color: #667eea;
-  background: #f8f9ff;
+  background: white;
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .icon {
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 .text {
-  font-size: 14px;
-  color: #666;
+  display: none; /* 在聊天栏紧凑显示时隐藏文字 */
 }
 
 .preview-area {
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid var(--primary-glow);
 }
 
 .preview-area img {
-  max-width: 200px;
-  max-height: 150px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
 }
 
 .btn-remove {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 24px;
-  height: 24px;
-  background: rgba(0, 0, 0, 0.6);
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: #ef4444;
   color: white;
-  border: none;
+  border: 2px solid white;
   border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  transition: background 0.3s;
+  font-size: 10px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: all 0.2s;
 }
 
 .btn-remove:hover {
-  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+  filter: brightness(1.2);
 }
 </style>
