@@ -295,14 +295,13 @@ function cleanText(text) {
   transition: transform 0.2s;
 }
 
-/* User Bubble with Tail (TUNED: More Vibrant) */
+/* User Bubble with Tail (TUNED V2: STRONGER CONTRAST) */
 .user .message-bubble {
-  /* Increased opacity and saturation */
-  background: linear-gradient(135deg, hsla(250, 100%, 70%, 1), hsla(280, 100%, 65%, 1)); 
+  background: linear-gradient(135deg, #8B5CF6, #7C3AED); /* Vivid Violet to slightly darker */
   color: white;
-  border-top-right-radius: 2px; /* Flatten corner for tail */
-  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3); /* Stronger glow */
-  border: 1px solid rgba(255,255,255,0.2);
+  border-top-right-radius: 2px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4); /* Deeper shadow */
+  border: none; /* Removed border found to dilute color */
 }
 
 .user .message-bubble::before {
@@ -314,18 +313,17 @@ function cleanText(text) {
   height: 0;
   border-style: solid;
   border-width: 6px 0 6px 9px;
-  border-color: transparent transparent transparent hsla(280, 100%, 65%, 1); /* Match gradient end */
-  filter: drop-shadow(2px 0 2px rgba(0,0,0,0.1));
+  border-color: transparent transparent transparent #7C3AED; /* Match gradient end */
+  filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.2));
 }
 
-/* Assistant Bubble with Tail (TUNED: Softer) */
+/* Assistant Bubble with Tail (TUNED V2: SOFTER OFF-WHITE) */
 .assistant .message-bubble {
-  background: #ffffff; /* Solid white for clarity, "softer" than translucent glass */
-  /* backdrop-filter: blur(12px); Removed blur for cleaner look */
-  color: #1e293b; /* Softer black (slate-800) */
-  border-top-left-radius: 2px; /* Flatten corner for tail */
-  border: none; /* Removed border to make it softer */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03); /* Very subtle shadow */
+  background: #F8FAFC; /* Slate-50, soft off-white, warmer/softer than pure white */
+  color: #334155; /* Slate-700, softer black */
+  border-top-left-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04); /* Very gentle shadow */
+  border: 1px solid rgba(0,0,0,0.03); /* Extremely subtle border */
 }
 
 .assistant .message-bubble::before {
@@ -337,8 +335,8 @@ function cleanText(text) {
   height: 0;
   border-style: solid;
   border-width: 6px 9px 6px 0;
-  border-color: transparent #ffffff transparent transparent;
-  filter: drop-shadow(-1px 0 1px rgba(0,0,0,0.03));
+  border-color: transparent #F8FAFC transparent transparent;
+  filter: drop-shadow(-1px 1px 2px rgba(0,0,0,0.04));
 }
 
 .image-box {

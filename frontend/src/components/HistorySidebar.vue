@@ -3,8 +3,14 @@
     <div class="header">
       <h3>历史对话</h3>
       <div class="header-actions">
-        <button class="btn-new-chat" @click="chatStore.startNewChat" title="开始新对话">+</button>
-        <button class="btn-refresh" @click="chatStore.loadConversations" title="刷新列表">🔄</button>
+        <button class="btn-refresh" @click="chatStore.loadConversations" title="刷新列表">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2v6h-6"></path>
+            <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+            <path d="M3 22v-6h6"></path>
+            <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+          </svg>
+        </button>
       </div>
     </div>
     
@@ -23,6 +29,13 @@
           />
           <span class="role-name">{{ group.roleName }}</span>
           <span class="count">({{ group.conversations.length }})</span>
+          
+          <div class="role-actions">
+            <!-- 加上新对话按钮 -->
+            <button class="btn-group-action" @click="handleNewChat(group.roleId)" title="与此角色开始新对话">
+              +
+            </button>
+          </div>
         </div>
         
         <div class="group-conversations">
@@ -133,6 +146,20 @@ async function handleDelete(conversation) {
     }
   }
 }
+
+async function handleNewChat(roleId) {
+  // Find role from store
+  const role = chatStore.roles.find(r => r.id === roleId);
+  if (role) {
+     const shouldConfirm = chatStore.messages.length > 0 && chatStore.currentConversationId === null;
+     if (shouldConfirm) {
+        if (!confirm('当前有未保存的对话，确定要开始新对话吗？')) return;
+     }
+     
+     chatStore.startNewChat(role);
+     // If sidebar is overlay on mobile (future proof), close it here
+  }
+}
 </script>
 
 <style scoped>
@@ -164,10 +191,9 @@ async function handleDelete(conversation) {
   gap: 8px;
 }
 
-.btn-new-chat,
 .btn-refresh {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
+  background: white;
+  border: 1px solid var(--primary-glow);
   cursor: pointer;
   font-size: 0.9rem;
   width: 28px;
@@ -177,14 +203,15 @@ async function handleDelete(conversation) {
   align-items: center;
   justify-content: center;
   transition: all 0.3s;
-  color: var(--text-muted);
+  color: var(--primary);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-.btn-new-chat:hover,
 .btn-refresh:hover {
-  background: var(--surface-hover);
-  color: var(--primary);
-  border-color: var(--primary-glow);
+  background: var(--primary);
+  color: white;
+  transform: rotate(180deg);
+  box-shadow: 0 4px 10px var(--primary-glow);
 }
 
 .btn-refresh:hover {
@@ -226,6 +253,38 @@ async function handleDelete(conversation) {
   border: 1px solid var(--border-subtle);
   background: white;
   flex-shrink: 0;
+}
+
+.role-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.btn-group-action {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px; /* Square with slight round */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.btn-group-action:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .count {

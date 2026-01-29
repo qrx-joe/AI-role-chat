@@ -74,7 +74,10 @@ export const useChatStore = defineStore('chat', () => {
         }
     }
 
-    function startNewChat() {
+    function startNewChat(role = null) {
+        if (role) {
+            currentRole.value = role;
+        }
         currentConversationId.value = null;
         messages.value = [];
     }
