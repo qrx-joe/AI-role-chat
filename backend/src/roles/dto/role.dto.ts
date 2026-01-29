@@ -24,10 +24,6 @@ export class CreateRoleDto {
     @IsOptional()
     @IsString()
     avatar?: string;
-
-    @IsOptional()
-    @IsString()
-    avatar?: string;
 }
 
 export class UpdateRoleDto {
