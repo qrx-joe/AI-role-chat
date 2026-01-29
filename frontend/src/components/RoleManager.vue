@@ -41,6 +41,13 @@
         :class="{ active: chatStore.currentRole?.id === role.id }"
         @click="chatStore.selectRole(role)"
       >
+      >
+        <img 
+          :src="getAvatarUrl(role)" 
+          class="role-avatar-img" 
+          alt="avatar"
+          loading="lazy"
+        />
         <h3>{{ role.name }}</h3>
         <!-- <p class="personality">{{ role.personality }}</p> 用户要求隐藏 -->
         <div class="card-actions">
@@ -53,32 +60,64 @@
     <!-- 创建/编辑角色弹窗 (不变) -->
     <div v-if="showDialog" class="dialog-overlay" @click="closeDialog">
       <div class="dialog" @click.stop>
-        <h3>{{ isEditing ? '编辑角色' : '创建新角色' }}</h3>
-        <div class="form-group">
-            <span class="form-label">角色名称</span>
-            <input v-model="roleForm.name" placeholder="给你的 AI 起个名字" />
+        <div class="dialog-content">
+          <h3>{{ isEditing ? '编辑角色' : '创建新角色' }}</h3>
+          
+          <!-- Avatar Section -->
+          <div class="avatar-section">
+             <div class="avatar-wrapper" @click="showAvatarZoom = true" title="点击放大预览">
+                <img :src="roleForm.avatar || getInitials(roleForm.name)" 
+                     :class="{ 'is-placeholder': !roleForm.avatar }"
+                     alt="Avatar Preview" />
+                <div class="avatar-overlay">🔍</div>
+             </div>
+             
+             <div class="avatar-controls">
+                <button class="btn-random" @click="generateRandomAvatar" title="随机生成新形象">
+                   🎲 随机生成
+                </button>
+                <div class="url-input-wrapper">
+                   <input v-model="roleForm.avatar" placeholder="或者粘贴图片 URL..." />
+                </div>
+             </div>
+          </div>
+
+          <div class="form-group">
+              <span class="form-label">角色名称</span>
+              <input v-model="roleForm.name" placeholder="给你的 AI 起个名字" />
+          </div>
+          
+          <div class="form-group">
+              <span class="form-label">性格特征</span>
+              <textarea v-model="roleForm.personality" placeholder="如：毒舌、温柔、严谨..." rows="2"></textarea>
+          </div>
+          <div class="form-group">
+              <span class="form-label">背景故事</span>
+              <textarea v-model="roleForm.background" placeholder="它来自哪里？有什么故事？" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+              <span class="form-label optional">行为约束</span>
+              <textarea v-model="roleForm.constraints" placeholder="有什么是它绝对不能做的？" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+              <span class="form-label optional">对话示例</span>
+              <textarea v-model="roleForm.examples" placeholder="用户：你好 AI：..." rows="3"></textarea>
+          </div>
         </div>
-        <div class="form-group">
-            <span class="form-label">性格特征</span>
-            <textarea v-model="roleForm.personality" placeholder="如：毒舌、温柔、严谨..." rows="2"></textarea>
-        </div>
-        <div class="form-group">
-            <span class="form-label">背景故事</span>
-             <textarea v-model="roleForm.background" placeholder="它来自哪里？有什么故事？" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-            <span class="form-label optional">行为约束</span>
-            <textarea v-model="roleForm.constraints" placeholder="有什么是它绝对不能做的？" rows="2"></textarea>
-        </div>
-        <div class="form-group">
-            <span class="form-label optional">对话示例</span>
-             <textarea v-model="roleForm.examples" placeholder="用户：你好 AI：..." rows="3"></textarea>
-        </div>
-        <div class="dialog-actions">
-          <button @click="closeDialog">取消</button>
-          <button @click="handleSubmit" class="btn-primary">{{ isEditing ? '保存修改' : '立即创建' }}</button>
+        
+        <div class="dialog-footer">
+          <button @click="closeDialog" class="btn-cancel">取消</button>
+          <button @click="handleSubmit" class="btn-primary-action">
+            {{ isEditing ? '保存修改' : '立即创建' }}
+          </button>
         </div>
       </div>
+    </div>
+    
+    <!-- Image Zoom Lightbox -->
+    <div v-if="showAvatarZoom" class="lightbox-overlay" @click="showAvatarZoom = false">
+       <img :src="roleForm.avatar" class="lightbox-img" @click.stop />
+       <button class="lightbox-close" @click="showAvatarZoom = false">×</button>
     </div>
   </div>
 </template>
@@ -100,6 +139,7 @@ const props = defineProps({
 
 const chatStore = useChatStore();
 const showDialog = ref(false);
+const showAvatarZoom = ref(false);
 const isEditing = ref(false);
 const editingRoleId = ref(null);
 const roleForm = ref({
@@ -108,12 +148,22 @@ const roleForm = ref({
   background: '',
   constraints: '',
   examples: '',
+  avatar: ''
 });
 
 function openCreateDialog() {
   isEditing.value = false;
   editingRoleId.value = null;
-  roleForm.value = { name: '', personality: '', background: '', constraints: '', examples: '' };
+  // Initialize with a random avatar immediately for better UX
+  const seed = Math.random().toString(36).substring(7);
+  roleForm.value = { 
+     name: '', 
+     personality: '', 
+     background: '', 
+     constraints: '', 
+     examples: '', 
+     avatar: generateDiceBearUrl(seed) // Auto-gen one to start
+  };
   showDialog.value = true;
 }
 
@@ -126,6 +176,7 @@ function openEditDialog(role) {
 
 function closeDialog() {
   showDialog.value = false;
+  showAvatarZoom.value = false;
 }
 
 async function handleSubmit() {
@@ -150,6 +201,40 @@ async function handleDelete(roleId) {
   if (confirm('确定删除这个角色吗？')) {
     await chatStore.deleteRole(roleId);
   }
+}
+// Helper to get avatar URL (Default: Notionists with Morandi BG)
+function getAvatarUrl(role) {
+  // If role has a specific avatar set (custom URL or saved DiceBear URL), use it.
+  if (role.avatar) return role.avatar;
+  
+  // Default fallback: Generate deterministic Notion-style avatar based on name
+  return generateDiceBearUrl(role.name);
+}
+
+function generateDiceBearUrl(seed) {
+  const style = 'notionists'; // Human-like, expressive, fits 'Persona'
+  
+  // Bright Pastel Palette (Fresher, Lighter Tones)
+  const colors = [
+    'FFD6E0', // Light Sakura Pink
+    'C1E7E3', // Fresh Mint Green
+    'D1E8FF', // Bright Sky Blue
+    'FFF2CC', // Light Lemon
+    'E2D4F5', // Soft Lavender
+    'FFE6D1'  // Pale Apricot
+  ].join(',');
+
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${colors}`;
+}
+
+// Generate a random avatar URL for the form
+function generateRandomAvatar() {
+  const randomSeed = Math.random().toString(36).substring(7);
+  roleForm.value.avatar = generateDiceBearUrl(randomSeed);
+}
+
+function getInitials(name) {
+  return name ? name.charAt(0).toUpperCase() : '?';
 }
 </script>
 
@@ -261,6 +346,26 @@ async function handleDelete(roleId) {
   overflow: hidden;
 }
 
+.role-avatar, .role-avatar-img {
+  width: 56px; /* Slightly larger for patterns */
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Soft shadow for image */
+  background: white; /* Fallback/Loading bg */
+  border: 2px solid white; 
+}
+
+/* Grid View Avatar overrides */
+.grid-view .role-avatar, .grid-view .role-avatar-img {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+  border: 4px solid rgba(255,255,255,0.9);
+}
+
 /* Specific styles for Grid Cards */
 .grid-view .role-card {
   height: 240px; /* Taller cards */
@@ -331,9 +436,6 @@ async function handleDelete(roleId) {
   transition: opacity 0.3s;
 }
 
-.role-card:hover {
-  /* Only apply translateY if NOT in grid view (handled above) */
-}
 .role-list:not(.grid-view) .role-card:hover { 
   transform: translateY(-3px) scale(1.01);
   background: hsla(255, 100%, 100%, 0.5);
@@ -371,6 +473,7 @@ async function handleDelete(roleId) {
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -434,15 +537,41 @@ async function handleDelete(roleId) {
 .dialog {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(24px);
-  padding: 32px 40px; 
+  padding: 0; /* Remove padding here, move to content */
   border-radius: 24px;
   width: 580px;
   max-width: 90vw;
+  max-height: 90vh; /* Limit height */
   box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.5);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0; /* Handle gap in scroll area */
   animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden; /* rounded corners */
+}
+
+.dialog-content {
+  padding: 32px 40px;
+  overflow-y: auto; /* Scrollable content */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dialog-header {
+  padding: 24px 40px 0 40px;
+  flex-shrink: 0;
+}
+
+.dialog-footer {
+  padding: 20px 40px 32px 40px;
+  border-top: 1px solid var(--border-subtle);
+  background: white;
+  flex-shrink: 0; /* Always visible */
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
 }
 
 @keyframes scaleIn {
@@ -496,6 +625,52 @@ async function handleDelete(roleId) {
   resize: vertical;
 }
 
+.input-with-action {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-icon-action {
+  background: white; /* Explicit white instead of var */
+  border: 1px solid #e0e0e0; /* Explicit border */
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* Add shadow for visibility */
+}
+
+.btn-icon-action:hover {
+  background: #f0f7ff;
+  border-color: var(--primary);
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.avatar-preview-small {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.avatar-preview-small img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+}
+
 .dialog input:focus, 
 .dialog textarea:focus {
   outline: none;
@@ -507,14 +682,7 @@ async function handleDelete(roleId) {
 .dialog input { height: 48px; }
 .dialog textarea { min-height: 80px; }
 
-.dialog-actions {
-  display: flex;
-  gap: 16px;
-  justify-content: flex-end;
-  margin-top: 12px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-subtle);
-}
+/* Old dialog-actions removed, replaced by .dialog-footer */
 
 .dialog-actions button {
   padding: 12px 28px;
@@ -546,5 +714,182 @@ async function handleDelete(roleId) {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px var(--primary-glow);
   filter: brightness(1.05);
+}
+
+/* --- Avatar Section Styles --- */
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.avatar-wrapper {
+  width: 120px; /* Larger */
+  height: 120px;
+  border-radius: 50%;
+  position: relative;
+  cursor: zoom-in;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border: 4px solid white;
+  background: white;
+  transition: transform 0.2s;
+  overflow: hidden; /* Fix image spilling */
+  display: flex; /* Center alignment */
+  align-items: center;
+  justify-content: center;
+}
+
+/* ... existing code ... */
+
+.btn-primary-action {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  padding: 12px 32px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px var(--primary-glow);
+  transition: all 0.2s;
+  flex: 1; /* Make it wide */
+  max-width: 200px;
+}
+
+.btn-primary-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--primary-glow);
+  filter: brightness(1.05);
+}
+
+.btn-cancel {
+  padding: 12px 24px;
+  border: 1px solid var(--border-subtle);
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.btn-cancel:hover {
+  background: #f5f5f5;
+  color: var(--text-main);
+}
+
+.avatar-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.3);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-controls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.btn-random {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.btn-random:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #f0f7ff;
+}
+
+.url-input-wrapper {
+  flex: 1;
+  max-width: 300px;
+}
+
+.url-input-wrapper input {
+  height: 36px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+
+/* --- Lightbox --- */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+  animation: fadeIn 0.2s;
+  backdrop-filter: blur(5px);
+}
+
+.lightbox-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  cursor: default;
+  animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: white;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255,255,255,0.2);
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.lightbox-close:hover {
+  background: rgba(255,255,255,0.4);
 }
 </style>

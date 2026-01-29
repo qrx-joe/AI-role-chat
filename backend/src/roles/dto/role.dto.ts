@@ -20,6 +20,14 @@ export class CreateRoleDto {
     @IsOptional()
     @IsString()
     examples?: string;
+
+    @IsOptional()
+    @IsString()
+    avatar?: string;
+
+    @IsOptional()
+    @IsString()
+    avatar?: string;
 }
 
 export class UpdateRoleDto {
@@ -42,4 +50,8 @@ export class UpdateRoleDto {
     @IsOptional()
     @IsString()
     examples?: string;
+
+    @IsOptional()
+    @IsString()
+    avatar?: string;
 }

@@ -22,6 +22,9 @@ export class Role {
   @Column('text', { nullable: true })
   examples: string;
 
+  @Column('text', { nullable: true })
+  avatar: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
