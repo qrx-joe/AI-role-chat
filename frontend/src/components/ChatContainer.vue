@@ -35,7 +35,7 @@
                 <img :src="chatStore.parseMessageContent(msg.content).image" alt="Upload" />
               </div>
             </template>
-            <div class="text-content">{{ chatStore.parseMessageContent(msg.content).text }}</div>
+            <div class="text-content">{{ cleanText(chatStore.parseMessageContent(msg.content).text) }}</div>
           </div>
         </div>
       </div>
@@ -95,6 +95,12 @@ async function handleSend() {
   uploadedImage.value = null;
 
   await chatStore.sendMessage(text, image);
+}
+
+function cleanText(text) {
+  if (!text) return '';
+  // Remove [图片内容描述：...] block which includes newlines
+  return text.replace(/\[图片内容描述：[\s\S]*?\]\s*/g, '').trim();
 }
 </script>
 
@@ -271,15 +277,14 @@ async function handleSend() {
 
 .image-box img {
   display: block;
-  max-width: 100%;
-  max-height: 300px;
-  object-fit: cover;
+  width: 100%; /* Fill container */
+  height: auto; /* Maintain aspect ratio */
+  max-height: 400px; /* Cap height to prevent too tall images */
+  /* object-fit: cover; Removed to show full image content */
   transition: transform 0.5s;
+  border-radius: var(--radius-md); /* Consistent rounding */
 }
 
-.image-box:hover img {
-  transform: scale(1.02);
-}
 
 .text-content {
   white-space: pre-wrap;
