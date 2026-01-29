@@ -1,36 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 :root {
-  /* 品牌色 - 更加现代且具有活力的蓝色方案 */
-  --primary: hsl(235, 85%, 65%);
-  --primary-glow: hsla(235, 85%, 65%, 0.3);
-  --secondary: hsl(265, 85%, 65%);
+  /* =================================================================
+     Premium Glassmorphism Design System
+     ================================================================= */
 
-  /* 表面颜色 - 切换为明亮的渐变方案 */
-  --bg-app: linear-gradient(135deg, hsl(230, 100%, 97%) 0%, hsl(260, 100%, 95%) 100%);
-  --surface: hsla(0, 0%, 100%, 0.7);
-  --surface-hover: hsla(0, 0%, 100%, 0.9);
-  --surface-active: hsla(0, 0%, 100%, 1);
-  --glass: hsla(0, 0%, 100%, 0.4);
-  --glass-border: hsla(0, 0%, 100%, 0.6);
+  /* --- 🎭 Palette: Electric Violet --- */
+  /* 主色调：带有荧光感的紫罗兰色，用于核心操作点 */
+  --primary: hsl(270, 95%, 65%);
+  --primary-hover: hsl(270, 95%, 70%);
+  --primary-glow: hsla(270, 95%, 65%, 0.4);
 
-  /* 文本颜色 - 确保在亮色背景下清晰 */
-  --text-main: hsl(220, 40%, 15%);
-  --text-muted: hsl(220, 20%, 45%);
-  --text-on-primary: #ffffff;
+  /* 辅色调：赛博青，用于点缀 */
+  --secondary: hsl(190, 85%, 60%);
+  --secondary-glow: hsla(190, 85%, 60%, 0.4);
 
-  /* 阴影与圆角 */
+  /* --- 🌌 Aurora Mesh Background --- */
+  /* 极光背景：复杂的多层渐变，营造流动的空间感 */
+  --bg-app: radial-gradient(at 0% 0%, hsla(270, 60%, 80%, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(190, 60%, 80%, 0.4) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(300, 60%, 85%, 0.4) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(240, 60%, 85%, 0.4) 0px, transparent 50%),
+    linear-gradient(135deg, hsl(260, 20%, 96%) 0%, hsl(280, 20%, 94%) 100%);
+
+  /* --- 🎨 Surface & Glass --- */
+  /* 水晶白表面：高饱和度透视 */
+  --surface: hsla(255, 100%, 100%, 0.65);
+  --surface-hover: hsla(255, 100%, 100%, 0.8);
+  --surface-active: hsla(255, 100%, 100%, 0.95);
+
+  /* 磨砂玻璃效果 */
+  --glass: hsla(255, 100%, 100%, 0.4);
+  --glass-nav: hsla(255, 100%, 100%, 0.5);
+  /* 导航栏专用 */
+
+  /* 质感边框 */
+  --border-light: hsla(255, 100%, 100%, 0.8);
+  --border-subtle: hsla(260, 20%, 80%, 0.3);
+
+  /* --- ✒️ Text System --- */
+  /* 深邃灰调，避免纯黑生硬感 */
+  --text-main: hsl(260, 30%, 20%);
+  --text-primary: hsl(270, 80%, 55%);
+  /* 品牌色文字 */
+  --text-muted: hsl(260, 15%, 55%);
+  --text-light: hsl(0, 0%, 100%);
+
+  /* --- 📐 Metrics --- */
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
 
-  /* 排版 */
-  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
+  /* --- 🌑 Elevation --- */
+  --shadow-sm: 0 4px 12px hsla(260, 20%, 60%, 0.05);
+  --shadow-md: 0 8px 32px hsla(260, 30%, 50%, 0.1), inset 0 0 0 1px hsla(0, 0%, 100%, 0.5);
+  /* 光晕阴影 */
+  --shadow-glow: 0 0 20px var(--primary-glow);
+
+  /* --- 🔡 Typography --- */
+  --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'Space Grotesk', monospace;
 }
 
+/* 基础重置与全局设定 */
 * {
   margin: 0;
   padding: 0;
@@ -44,6 +78,10 @@ body {
   width: 100vw;
   background: var(--bg-app);
   color: var(--text-main);
+  font-family: var(--font-body);
+  /* 优化字体渲染 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
@@ -51,9 +89,10 @@ body {
   height: 100%;
 }
 
-/* 滚动条美化 */
+/* --- 🎭 Scrollbar Styling --- */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -61,19 +100,32 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsla(0, 0%, 0%, 0.1);
+  background: hsla(260, 10%, 70%, 0.4);
   border-radius: 10px;
+  transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsla(0, 0%, 0%, 0.2);
+  background: hsla(260, 10%, 60%, 0.6);
 }
 
-/* 动画定义 */
+/* --- ✨ Animations --- */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
 
   to {
@@ -82,14 +134,25 @@ body {
   }
 }
 
-@keyframes slideInRight {
-  from {
-    transform: translateX(20px);
-    opacity: 0;
+@keyframes pulse-subtle {
+  0% {
+    box-shadow: 0 0 0 0 var(--primary-glow);
   }
 
-  to {
-    transform: translateX(0);
-    opacity: 1;
+  70% {
+    box-shadow: 0 0 0 5px hsla(270, 95%, 65%, 0);
   }
+
+  100% {
+    box-shadow: 0 0 0 0 hsla(270, 95%, 65%, 0);
+  }
+}
+
+/* --- Utility Classes --- */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
 }

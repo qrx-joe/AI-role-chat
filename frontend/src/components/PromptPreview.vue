@@ -49,7 +49,7 @@ const generatedPrompt = computed(() => {
 .prompt-preview-overlay {
   position: fixed;
   inset: 0;
-  background: hsla(220, 30%, 5%, 0.4);
+  background: hsla(240, 20%, 5%, 0.3);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -59,30 +59,37 @@ const generatedPrompt = computed(() => {
 }
 
 .prompt-preview-modal {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.95);
   width: 640px;
   max-width: 90vw;
   max-height: 80vh;
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glow), var(--shadow-md);
+  border: 1px solid var(--border-light);
   overflow: hidden;
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .modal-header {
-  padding: 24px;
-  border-bottom: 1px solid var(--glass-border);
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to right, hsla(235, 85%, 65%, 0.05), transparent);
+  background: linear-gradient(to right, hsla(270, 95%, 65%, 0.05), transparent);
 }
 
 .modal-header h3 {
+  font-family: var(--font-heading);
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-main);
 }
 
@@ -92,48 +99,51 @@ const generatedPrompt = computed(() => {
 }
 
 .info-alert {
-  background: var(--primary-glow);
+  background: hsla(270, 95%, 65%, 0.08);
   color: var(--primary);
-  padding: 14px;
+  padding: 12px 16px;
   border-radius: var(--radius-md);
   margin-bottom: 20px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  border: 1px solid hsla(235, 85%, 65%, 0.2);
+  border: 1px solid hsla(270, 95%, 65%, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .prompt-content {
-  background: white;
-  padding: 24px;
+  background: #1e1e2e; /* 深色代码背景 */
+  padding: 20px;
   border-radius: var(--radius-md);
-  border: 1.5px solid #e2e8f0;
   white-space: pre-wrap;
   word-break: break-all;
-  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  font-family: 'Space Grotesk', 'Fira Code', monospace;
   font-size: 0.85rem;
   line-height: 1.7;
-  color: var(--text-main);
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  color: #cdd6f4;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .btn-close {
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
+  background: transparent;
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   color: var(--text-muted);
   transition: all 0.2s;
+  font-size: 1.1rem;
 }
 
 .btn-close:hover {
-  background: #ef4444;
+  background: #ff4757;
   color: white;
-  border-color: #ef4444;
   transform: rotate(90deg);
 }
 </style>

@@ -112,31 +112,35 @@ async function handleDelete(roleId) {
 }
 
 .header h2 {
-  font-size: 1.25rem;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-main);
-  background: linear-gradient(to right, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, var(--text-main) 0%, var(--primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
 }
 
 .btn-create {
   background: var(--primary);
   color: var(--text-on-primary);
   border: none;
-  padding: 8px 16px;
+  padding: 10px 20px;
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 0.875rem;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
   font-weight: 600;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px var(--primary-glow);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: var(--shadow-glow);
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-create:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-  box-shadow: 0 6px 16px var(--primary-glow);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px var(--primary-glow);
 }
 
 .role-list {
@@ -146,40 +150,64 @@ async function handleDelete(roleId) {
 }
 
 .role-card {
-  background: var(--surface);
+  background: hsla(255, 100%, 100%, 0.3);
   padding: 20px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  border: 1px solid var(--glass-border);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-subtle);
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
-  box-shadow: var(--shadow-sm);
-  animation: fadeIn 0.5s ease-out;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  overflow: hidden;
+}
+
+.role-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .role-card:hover {
-  transform: translateY(-4px);
-  background: var(--surface-hover);
+  transform: translateY(-3px) scale(1.01);
+  background: hsla(255, 100%, 100%, 0.5);
   box-shadow: var(--shadow-md);
   border-color: var(--primary-glow);
 }
 
 .role-card.active {
-  background: var(--surface-active);
-  border: 2px solid var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-glow);
+  background: white;
+  border-color: transparent;
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--primary-glow);
+}
+
+.role-card.active::before {
+  opacity: 1;
+}
+
+.role-card.active h3 {
+  color: var(--primary);
 }
 
 .role-card h3 {
+  font-family: var(--font-heading);
   font-size: 1.1rem;
-  margin-bottom: 4px;
+  font-weight: 600;
+  margin-bottom: 6px;
   color: var(--text-main);
+  transition: color 0.3s;
 }
 
 .personality {
   color: var(--text-muted);
   font-size: 0.875rem;
   margin: 0;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -188,13 +216,13 @@ async function handleDelete(roleId) {
 
 .card-actions {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 16px;
+  right: 16px;
   display: flex;
   gap: 8px;
   opacity: 0;
   transform: translateX(10px);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .role-card:hover .card-actions {
@@ -213,109 +241,149 @@ async function handleDelete(roleId) {
   border: none;
   font-size: 1rem;
   transition: all 0.2s;
-}
-
-.btn-edit {
-  background: whitesmoke;
-  color: var(--primary);
+  background: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .btn-edit:hover {
   background: var(--primary);
   color: white;
-}
-
-.btn-delete {
-  background: whitesmoke;
-  color: #ef4444;
+  transform: translateY(-2px);
 }
 
 .btn-delete:hover {
-  background: #ef4444;
+  background: #ff4757;
   color: white;
+  transform: translateY(-2px);
 }
 
+/* --- Modal Styles 2.0 --- */
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: hsla(220, 30%, 5%, 0.4);
-  backdrop-filter: blur(4px);
+  background: hsla(240, 20%, 5%, 0.4); /* 深色遮罩 */
+  backdrop-filter: blur(12px); /* 模糊背景 */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 2000;
   animation: fadeIn 0.3s ease-out;
 }
 
 .dialog {
-  background: var(--surface);
-  padding: 32px;
-  border-radius: var(--radius-lg);
-  width: 560px;
-  max-width: 95vw;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px);
+  padding: 32px 40px; /* 增加内边距 */
+  border-radius: 24px;
+  width: 580px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .dialog h3 {
-  font-size: 1.5rem;
-  margin-bottom: 24px;
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
   color: var(--text-main);
+  margin: 0 0 8px 0;
+  text-align: center;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.dialog input,
+/* Form Groups Layout */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.form-label.optional::after {
+  content: ' (可选)';
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.dialog input, 
 .dialog textarea {
   width: 100%;
-  padding: 14px;
-  margin-bottom: 16px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  background: rgba(240, 244, 255, 0.5);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   font-family: inherit;
   font-size: 0.95rem;
+  color: var(--text-main);
   transition: all 0.2s;
-  background: white;
+  resize: vertical;
 }
 
-.dialog input:focus,
+.dialog input:focus, 
 .dialog textarea:focus {
   outline: none;
+  background: white;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
+  box-shadow: 0 0 0 4px var(--primary-glow);
 }
+
+.dialog input { height: 48px; }
+.dialog textarea { min-height: 80px; }
 
 .dialog-actions {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   justify-content: flex-end;
-  margin-top: 24px;
+  margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .dialog-actions button {
-  padding: 12px 24px;
+  padding: 12px 28px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.95rem;
   transition: all 0.2s;
 }
 
-.dialog-actions button:not(.btn-primary) {
-  background: #f1f5f9;
-  color: #475569;
+.dialog-actions button:first-child { /* Cancel */
+  background: transparent;
+  color: var(--text-muted);
 }
 
-.dialog-actions button:not(.btn-primary):hover {
-  background: #e2e8f0;
+.dialog-actions button:first-child:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--text-main);
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
-  box-shadow: 0 4px 12px var(--primary-glow);
+  box-shadow: 0 4px 15px var(--primary-glow);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--primary-glow);
+  filter: brightness(1.05);
 }
 </style>

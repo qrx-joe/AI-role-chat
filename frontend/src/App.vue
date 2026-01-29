@@ -30,24 +30,26 @@ onMounted(() => {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: var(--bg-app);
-  padding: 12px; /* 给边框留出一点呼吸空间 */
-  gap: 12px;
+  background: var(--bg-app); /* 极光背景 */
+  padding: 16px; /* 增加呼吸感 */
+  gap: 16px;
 }
 
 .sidebar {
-  width: 320px;
-  flex: 0 0 320px;
-  background: var(--glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
+  width: 340px; /* 稍微加宽 */
+  flex: 0 0 340px;
+  background: var(--glass-nav); /* 更通透的导航背景 */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  animation: fadeIn 0.6s ease-out;
+  animation: slideInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 10;
 }
 
 .main-content {
@@ -56,25 +58,26 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: var(--surface);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--surface); /* 水晶白表面 */
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--border-light);
   box-shadow: var(--shadow-md);
   overflow: hidden;
-  animation: fadeIn 0.8s ease-out;
+  animation: fadeIn 0.8s ease-out 0.2s backwards; /* 错峰入场 */
+  z-index: 5;
 }
 
 .sidebar > *:first-child {
   flex: 0 0 auto;
-  max-height: 50%;
+  max-height: 55%;
   overflow-y: auto;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .sidebar > *:last-child {
   flex: 1;
   overflow-y: auto;
-  border-top: 1px solid var(--glass-border);
 }
 </style>

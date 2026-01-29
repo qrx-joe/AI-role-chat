@@ -61,11 +61,12 @@ const showState = ref(false);
   top: 80px;
   right: 24px;
   width: 380px;
-  background: hsla(220, 40%, 10%, 0.75);
-  backdrop-filter: blur(24px);
+  background: hsla(240, 20%, 10%, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: var(--radius-lg);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-  border: 1px solid hsla(0, 0%, 100%, 0.15);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  border: 1px solid hsla(0, 0%, 100%, 0.1);
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -80,11 +81,14 @@ const showState = ref(false);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: linear-gradient(to right, hsla(270, 95%, 65%, 0.1), transparent);
 }
 
 .debug-header h3 {
-  font-size: 0.9rem;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
   letter-spacing: 0.05em;
+  font-weight: 700;
 }
 
 .debug-content {
@@ -93,13 +97,14 @@ const showState = ref(false);
 }
 
 .debug-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .debug-section h4 {
+  font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: hsla(0, 0%, 100%, 0.5);
-  margin-bottom: 10px;
+  color: hsla(0, 0%, 100%, 0.6);
+  margin-bottom: 12px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -113,25 +118,27 @@ const showState = ref(false);
 }
 
 .json-block {
-  background: hsla(0, 0%, 0%, 0.3);
-  color: #a5d6ff;
-  padding: 12px;
-  border-radius: var(--radius-sm);
+  background: #0d1117; /* GitHub Dark 代码背景 */
+  color: #c9d1d9;
+  padding: 14px;
+  border-radius: var(--radius-md);
   font-size: 11px;
   overflow-x: auto;
-  font-family: 'Fira Code', monospace;
-  border: 1px solid hsla(0, 0%, 100%, 0.05);
-  line-height: 1.5;
+  font-family: 'Space Grotesk', 'Fira Code', monospace;
+  border: 1px solid hsla(0, 0%, 100%, 0.1);
+  line-height: 1.6;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
 }
 
 .json-block.mini {
-  margin-bottom: 6px;
-  padding: 8px;
-  color: #7ee787;
+  margin-bottom: 8px;
+  padding: 10px;
+  color: #7ee787; /* 成功绿 */
+  border-left: 2px solid #7ee787;
 }
 
 .btn-close {
-  background: hsla(0, 0%, 100%, 0.1);
+  background: rgba(255,255,255,0.1);
   border: none;
   width: 24px;
   height: 24px;
@@ -147,5 +154,6 @@ const showState = ref(false);
 
 .btn-close:hover {
   background: #ef4444;
+  transform: rotate(90deg);
 }
 </style>

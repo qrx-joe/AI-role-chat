@@ -115,32 +115,37 @@ async function handleDelete(conversation) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .header h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-main);
-  opacity: 0.9;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
 .btn-refresh {
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: 1px solid var(--border-subtle);
   cursor: pointer;
-  font-size: 0.875rem;
-  width: 32px;
-  height: 32px;
+  font-size: 0.9rem;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all 0.3s;
+  color: var(--text-muted);
 }
 
 .btn-refresh:hover {
-  background: var(--glass-border);
+  background: var(--surface-hover);
+  color: var(--primary);
+  border-color: var(--primary-glow);
   transform: rotate(180deg);
 }
 
@@ -149,7 +154,8 @@ async function handleDelete(conversation) {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+  padding-right: 4px; /* 滚动条空间 */
 }
 
 .role-group {
@@ -160,19 +166,17 @@ async function handleDelete(conversation) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
-  background: var(--glass);
-  border-radius: var(--radius-sm);
+  padding: 0 12px;
   margin-bottom: 12px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-weight: 600;
   font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--primary);
+  opacity: 0.8;
 }
 
 .count {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   opacity: 0.6;
   font-weight: normal;
 }
@@ -180,33 +184,45 @@ async function handleDelete(conversation) {
 .group-conversations {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-left: 4px;
+  gap: 6px;
 }
 
 .conversation-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 10px 14px;
   border-radius: var(--radius-md);
-  background: var(--surface);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid var(--glass-border);
+  /* 默认无背景，更干净 */
+  background: transparent;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border: 1px solid transparent;
   position: relative;
-  animation: fadeIn 0.4s ease-out;
+  overflow: hidden;
 }
 
 .conversation-item:hover {
   background: var(--surface-hover);
-  transform: translateX(4px);
-  border-color: var(--primary-glow);
+  transform: translateX(2px);
 }
 
 .conversation-item.active {
   background: var(--surface-active);
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px var(--primary-glow);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-subtle);
+}
+
+/* 激活状态左侧指示条 */
+.conversation-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 8px var(--primary-glow);
 }
 
 .conv-content {
@@ -217,12 +233,12 @@ async function handleDelete(conversation) {
 
 .btn-delete {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   border-radius: var(--radius-sm);
   opacity: 0;
   transition: all 0.2s;
@@ -232,28 +248,36 @@ async function handleDelete(conversation) {
 }
 
 .conversation-item:hover .btn-delete {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .btn-delete:hover {
   opacity: 1 !important;
-  background: hsla(0, 100%, 50%, 0.1);
-  color: #ef4444;
+  background: hsla(0, 80%, 60%, 0.1);
+  transform: scale(1.1);
 }
 
 .conv-title {
-  font-weight: 600;
-  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.9rem;
   color: var(--text-main);
   margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.conversation-item.active .conv-title {
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .conv-time {
+  font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-muted);
-  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 </style>
