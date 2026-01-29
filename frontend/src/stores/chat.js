@@ -16,6 +16,9 @@ export const useChatStore = defineStore('chat', () => {
     const lastRequestData = ref(null);
     const lastResponseChunks = ref([]);
 
+    // User Settings
+    const userAvatar = ref(localStorage.getItem('user_avatar') || 'https://api.dicebear.com/9.x/notionists/svg?seed=User&backgroundColor=e2d4f5');
+
     // Getters
     const hasSelectedRole = computed(() => !!currentRole.value);
 
@@ -210,6 +213,11 @@ export const useChatStore = defineStore('chat', () => {
     }
 
 
+    function setUserAvatar(url) {
+        userAvatar.value = url;
+        localStorage.setItem('user_avatar', url);
+    }
+
     return {
         roles,
         currentRole,
@@ -221,6 +229,8 @@ export const useChatStore = defineStore('chat', () => {
         lastRequestData,
         lastResponseChunks,
         hasSelectedRole,
+        userAvatar,
+        setUserAvatar,
         parseMessageContent,
         loadRoles,
         selectRole,

@@ -16,6 +16,11 @@
         class="role-group"
       >
         <div class="role-header">
+          <img 
+            :src="group.roleAvatar || getInitialsAvatar(group.roleName)" 
+            class="sidebar-role-avatar" 
+            alt="Role Avatar"
+          />
           <span class="role-name">{{ group.roleName }}</span>
           <span class="count">({{ group.conversations.length }})</span>
         </div>
@@ -70,11 +75,19 @@ const groupedConversations = computed(() => {
 
     const roleId = conv.role?.id || 'unknown';
     const roleName = conv.role?.name || '未知角色';
+    // Helper logic to get same consistent avatar
+    let roleAvatar = conv.role?.avatar;
+    if (!roleAvatar && conv.role?.name) {
+       const style = 'notionists';
+       const colors = 'FFD6E0,C1E7E3,D1E8FF,FFF2CC,E2D4F5,FFE6D1';
+       roleAvatar = `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(conv.role.name)}&backgroundColor=${colors}`;
+    }
     
     if (!groups[roleId]) {
       groups[roleId] = {
         roleId,
         roleName,
+        roleAvatar,
         conversations: []
       };
     }
@@ -95,6 +108,13 @@ const groupedConversations = computed(() => {
 onMounted(() => {
   chatStore.loadConversations();
 });
+
+function getInitialsAvatar(name) {
+  // Fallback just in case
+  const style = 'notionists';
+  const colors = 'FFD6E0,C1E7E3,D1E8FF,FFF2CC,E2D4F5,FFE6D1';
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(name || 'User')}&backgroundColor=${colors}`;
+}
 
 function formatTime(dateStr) {
   const date = new Date(dateStr);
@@ -191,11 +211,21 @@ async function handleDelete(conversation) {
   gap: 8px;
   padding: 0 12px;
   margin-bottom: 12px;
-  font-family: var(--font-heading); /* Changed to heading font for better look */
+  font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 1rem; /* Increased from 0.75rem */
+  font-size: 1rem;
   color: var(--primary);
-  opacity: 1; /* Increased visibility */
+  opacity: 1;
+}
+
+.sidebar-role-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+  background: white;
+  flex-shrink: 0;
 }
 
 .count {

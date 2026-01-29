@@ -9,7 +9,12 @@
     <div v-else class="chat-main">
       <header class="chat-header">
         <div class="role-info">
-          <!-- <span class="role-badge">{{ chatStore.currentRole.personality }}</span> -->
+          <img 
+            v-if="chatStore.currentRole"
+            :src="getRoleAvatar(chatStore.currentRole)" 
+            class="header-avatar" 
+            alt="Role Avatar"
+          />
           <h2>{{ chatStore.currentRole.name }}</h2>
         </div>
         <div class="header-actions">
@@ -26,9 +31,17 @@
         <div
           v-for="(msg, index) in chatStore.messages"
           :key="index"
-          class="message-wrap"
+          class="message-row"
           :class="[msg.role, { 'is-typing': chatStore.isStreaming && index === chatStore.messages.length - 1 && msg.role === 'assistant' }]"
         >
+          <!-- Avatar Column -->
+          <div class="message-avatar">
+            <img 
+              :src="msg.role === 'assistant' ? getRoleAvatar(chatStore.currentRole) : chatStore.userAvatar" 
+              alt="avatar" 
+            />
+          </div>
+
           <div class="message-bubble">
             <template v-if="msg.type === 'image'">
               <div class="image-box" v-if="chatStore.parseMessageContent(msg.content).image">
@@ -76,6 +89,15 @@ const inputText = ref('');
 const uploadedImage = ref(null);
 const messagesContainer = ref(null);
 const showDebug = ref(false);
+
+function getRoleAvatar(role) {
+  if (!role) return '';
+  if (role.avatar) return role.avatar;
+  // Use same fallback logic as RoleManager
+  const style = 'notionists';
+  const colors = 'FFD6E0,C1E7E3,D1E8FF,FFF2CC,E2D4F5,FFE6D1';
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(role.name)}&backgroundColor=${colors}`;
+}
 
 // 自动滚动到底部
 watch(() => chatStore.messages.length, async () => {
@@ -144,6 +166,7 @@ function cleanText(text) {
   margin-bottom: 12px;
   background: linear-gradient(135deg, var(--text-main) 30%, var(--primary) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.03em;
 }
@@ -194,12 +217,21 @@ function cleanText(text) {
   transform: translateY(-1px);
 }
 
-.role-info { display: flex; align-items: center; gap: 16px; }
+.role-info { display: flex; align-items: center; gap: 12px; }
+
+.header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
 .role-info h2 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.4rem;
+  font-size: 1.2rem; /* Slightly smaller to fit avatar */
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
@@ -229,17 +261,31 @@ function cleanText(text) {
   scroll-behavior: smooth;
 }
 
-.message-wrap { 
+.message-row { 
   display: flex; 
   width: 100%; 
+  gap: 12px;
   animation: slideInUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  align-items: flex-start;
 }
 
-.message-wrap.user { justify-content: flex-end; }
-.message-wrap.assistant { justify-content: flex-start; }
+.message-row.user { 
+  flex-direction: row-reverse; 
+}
+
+.message-avatar img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: white;
+  flex-shrink: 0;
+}
 
 .message-bubble {
-  max-width: 80%;
+  max-width: 75%;
   padding: 16px 22px;
   border-radius: var(--radius-lg);
   font-size: 0.95rem;
@@ -249,42 +295,67 @@ function cleanText(text) {
   transition: transform 0.2s;
 }
 
+/* User Bubble with Tail (TUNED: More Vibrant) */
 .user .message-bubble {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  /* Increased opacity and saturation */
+  background: linear-gradient(135deg, hsla(250, 100%, 70%, 1), hsla(280, 100%, 65%, 1)); 
   color: white;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 8px 24px var(--primary-glow);
+  border-top-right-radius: 2px; /* Flatten corner for tail */
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3); /* Stronger glow */
   border: 1px solid rgba(255,255,255,0.2);
 }
 
+.user .message-bubble::before {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 12px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 0 6px 9px;
+  border-color: transparent transparent transparent hsla(280, 100%, 65%, 1); /* Match gradient end */
+  filter: drop-shadow(2px 0 2px rgba(0,0,0,0.1));
+}
+
+/* Assistant Bubble with Tail (TUNED: Softer) */
 .assistant .message-bubble {
-  background: rgba(255, 255, 255, 0.85); /* 半透明白 */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--text-main);
-  border-bottom-left-radius: 4px;
-  border: 1px solid var(--border-light);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+  background: #ffffff; /* Solid white for clarity, "softer" than translucent glass */
+  /* backdrop-filter: blur(12px); Removed blur for cleaner look */
+  color: #1e293b; /* Softer black (slate-800) */
+  border-top-left-radius: 2px; /* Flatten corner for tail */
+  border: none; /* Removed border to make it softer */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03); /* Very subtle shadow */
+}
+
+.assistant .message-bubble::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 12px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 9px 6px 0;
+  border-color: transparent #ffffff transparent transparent;
+  filter: drop-shadow(-1px 0 1px rgba(0,0,0,0.03));
 }
 
 .image-box {
-  margin-bottom: 12px;
+  margin: -6px -10px 10px;
   overflow: hidden;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--border-light);
 }
 
 .image-box img {
   display: block;
-  width: 100%; /* Fill container */
-  height: auto; /* Maintain aspect ratio */
-  max-height: 400px; /* Cap height to prevent too tall images */
-  /* object-fit: cover; Removed to show full image content */
-  transition: transform 0.5s;
-  border-radius: var(--radius-md); /* Consistent rounding */
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  border-radius: 8px;
 }
-
 
 .text-content {
   white-space: pre-wrap;

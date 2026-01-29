@@ -34,6 +34,15 @@
         <p class="create-desc">设计属于你的 AI 伙伴</p>
       </div>
 
+       <!-- User Avatar Setting Card (Only in Grid Mode) -->
+      <div v-if="grid" class="role-card user-card" @click="openUserAvatarDialog">
+        <div class="user-avatar-wrapper">
+           <img :src="chatStore.userAvatar" alt="User Avatar" />
+        </div>
+        <h3>我的头像</h3>
+        <p class="create-desc">点击设置用户形象</p>
+      </div>
+
       <div
         v-for="role in chatStore.roles"
         :key="role.id"
@@ -53,6 +62,34 @@
         <div class="card-actions">
           <button class="btn-edit" @click.stop="openEditDialog(role)" title="编辑角色">📝</button>
           <button class="btn-delete" @click.stop="handleDelete(role.id)" title="删除角色">🗑️</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Avatar Dialog -->
+    <div v-if="showUserAvatarDialog" class="dialog-overlay" @click="showUserAvatarDialog = false">
+      <div class="dialog" @click.stop style="width: 480px;">
+        <div class="dialog-content">
+          <h3>设置我的头像</h3>
+          
+           <div class="avatar-section">
+             <div class="avatar-wrapper">
+                <img :src="userAvatarForm" alt="User Avatar Preview" />
+             </div>
+             
+             <div class="avatar-controls">
+                <button class="btn-random" @click="generateRandomUserAvatar" title="随机生成新形象">
+                   🎲 随机生成
+                </button>
+                <div class="url-input-wrapper">
+                   <input v-model="userAvatarForm" placeholder="粘贴图片 URL..." />
+                </div>
+             </div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button @click="showUserAvatarDialog = false" class="btn-cancel">取消</button>
+          <button @click="saveUserAvatar" class="btn-primary-action">保存设置</button>
         </div>
       </div>
     </div>
@@ -233,6 +270,24 @@ function generateRandomAvatar() {
   roleForm.value.avatar = generateDiceBearUrl(randomSeed);
 }
 
+const showUserAvatarDialog = ref(false);
+const userAvatarForm = ref('');
+
+function openUserAvatarDialog() {
+  userAvatarForm.value = chatStore.userAvatar;
+  showUserAvatarDialog.value = true;
+}
+
+function generateRandomUserAvatar() {
+  const seed = Math.random().toString(36).substring(7);
+  userAvatarForm.value = generateDiceBearUrl(seed);
+}
+
+function saveUserAvatar() {
+  chatStore.setUserAvatar(userAvatarForm.value);
+  showUserAvatarDialog.value = false;
+}
+
 function getInitials(name) {
   return name ? name.charAt(0).toUpperCase() : '?';
 }
@@ -392,7 +447,11 @@ function getInitials(name) {
 
 .grid-view .personality {
   font-size: 0.95rem;
+  display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Create Card in Grid */
@@ -421,6 +480,32 @@ function getInitials(name) {
 .create-desc {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+/* User Card in Grid */
+.role-card.user-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.6));
+  border: 2px solid white;
+}
+
+.user-avatar-wrapper {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  padding: 4px;
+  background: white;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 /* Keep existing list styles for sidebar mode */
