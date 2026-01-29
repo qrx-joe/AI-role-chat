@@ -138,12 +138,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: var(--surface);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: white; /* Solid base */
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.04); /* Subtle lift */
   overflow: hidden;
   animation: fadeIn 0.8s ease-out 0.2s backwards;
   z-index: 5;

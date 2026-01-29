@@ -39,7 +39,10 @@
               @click.stop="handleDelete(conv)"
               title="删除对话"
             >
-              🗑️
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
             </button>
           </div>
         </div>
@@ -213,91 +216,94 @@ async function handleDelete(conversation) {
   gap: 12px;
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  /* 默认无背景，更干净 */
   background: transparent;
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   border: 1px solid transparent;
   position: relative;
   overflow: hidden;
+  margin-bottom: 4px; /* Space items slightly */
 }
 
 .conversation-item:hover {
-  background: var(--surface-hover);
-  transform: translateX(2px);
+  background: rgba(0, 0, 0, 0.03); /* Subtle hover */
 }
 
 .conversation-item.active {
-  background: var(--surface-active);
-  box-shadow: var(--shadow-sm);
+  background: white; /* Card-like active state */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   border-color: var(--border-subtle);
 }
 
-/* 激活状态左侧指示条 */
+/* 激活状态左侧指示条 - 加粗并改为圆角条 */
 .conversation-item.active::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 10%;
-  bottom: 10%;
-  width: 3px;
+  left: 4px;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
   background: var(--primary);
-  border-radius: 0 4px 4px 0;
-  box-shadow: 0 0 8px var(--primary-glow);
-}
-
-.conv-content {
-  flex: 1;
-  cursor: pointer;
-  min-width: 0;
-}
-
-.btn-delete {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.9rem;
-  border-radius: var(--radius-sm);
-  opacity: 0;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.conversation-item:hover .btn-delete {
-  opacity: 0.5;
-}
-
-.btn-delete:hover {
-  opacity: 1 !important;
-  background: hsla(0, 80%, 60%, 0.1);
-  transform: scale(1.1);
+  border-radius: 4px;
 }
 
 .conv-title {
   font-family: var(--font-body);
   font-weight: 500;
-  font-size: 0.9rem;
-  color: var(--text-main);
-  margin-bottom: 2px;
+  font-size: 0.95rem; /* Slightly larger */
+  color: var(--text-main); /* Ensure dark color */
+  margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.2s;
 }
 
 .conversation-item.active .conv-title {
   color: var(--primary);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .conv-time {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  letter-spacing: -0.02em;
+  font-size: 0.75rem;
+  color: #94a3b8; /* Slate-400 equivalent for better readability than muted */
+  letter-spacing: -0.01em;
+}
+/* Ensure content takes available space but allows button to sit on the right */
+.conv-content {
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+  /* Ensure padding-right so text doesn't overlap the button that appears */
+  padding-right: 24px; 
+}
+
+.btn-delete {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #94a3b8; /* Muted slate */
+  border-radius: 4px;
+  opacity: 0; /* Hidden by default */
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.conversation-item:hover .btn-delete {
+  opacity: 1; /* Show on hover */
+}
+
+.btn-delete:hover {
+  color: #ef4444; /* Red color on hover */
+  background: rgba(239, 68, 68, 0.1);
+  transform: translateY(-50%) scale(1.1);
 }
 </style>
