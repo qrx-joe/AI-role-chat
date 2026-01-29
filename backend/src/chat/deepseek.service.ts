@@ -393,6 +393,137 @@ export class DeepseekService {
     }
 
     /**
+     * AI智能标题生成【核心辅助功能】
+     * 
+     * 根据用户发送的消息内容，调用 DeepSeek API 生成简洁且有信息量的对话标题。
+     * 这个方法用于替代简单的文本截取，使对话标题更具概括性和可读性。
+     * 
+     * ## 设计理念
+     * 
+     * 1. **智能概括** - 由AI理解消息内容后生成标题，比简单截取更准确
+     * 2. **长度控制** - 限制在10个字以内，适合侧边栏展示
+     * 3. **场景适配** - 支持纯文本和图片对话的标题生成
+     * 4. **容错处理** - 遇到错误时优雅降级，使用默认标题
+     * 
+     * ## 工作流程
+     * 
+     * ```
+     * 接收用户消息
+     *   ↓
+     * 构建标题生成提示词 (要求简洁、10字以内)
+     *   ↓
+     * 调用 DeepSeek API (非流式)
+     *   ↓
+     * 提取并清洗标题文本
+     *   ↓
+     * 返回最终标题 (失败时返回默认标题)
+     * ```
+     * 
+     * ## 使用示例
+     * 
+     * ```typescript
+     * // 纯文本消息
+     * const title1 = await deepseekService.generateTitle('帮我写一段Python代码实现快速排序', null);
+     * // 输出: "Python快速排序"
+     * 
+     * // 图片消息
+     * const title2 = await deepseekService.generateTitle('这是什么动物？', 'data:image/jpeg;base64,...');
+     * // 输出: "动物识别"
+     * ```
+     * 
+     * @param message - 用户发送的文本消息
+     * @param imageBase64 - 可选的Base64编码图片数据
+     * @returns Promise<string> - 生成的标题字符串
+     * 
+     * @throws 内部捕获所有异常，不会抛出错误，失败时返回默认标题
+     */
+    async generateTitle(message: string, imageBase64: string | null): Promise<string> {
+        try {
+            // 构建消息内容
+            const userContent: Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string } }> = [];
+
+            // 如果有图片,优先使用图片信息
+            if (imageBase64) {
+                userContent.push(
+                    { type: 'text' as const, text: '请为这段对话生成一个简洁的标题（10字以内）：' },
+                    { type: 'text' as const, text: message || '用户发送了一张图片' },
+                    { type: 'image_url' as const, image_url: { url: imageBase64 } }
+                );
+            } else {
+                userContent.push({
+                    type: 'text' as const,
+                    text: `请为这段对话生成一个简洁的标题（10字以内）：\n${message}`
+                });
+            }
+
+            // 调用 DeepSeek API 生成标题
+            const response = await axios.post(
+                `${this.baseUrl}/chat/completions`,
+                {
+                    model: 'deepseek-chat',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: '你是一个标题生成助手。请根据用户的消息内容，生成一个简洁、准确的对话标题，不超过10个字。直接输出标题，不要包含引号、标点或其他说明文字。'
+                        },
+                        {
+                            role: 'user',
+                            content: userContent
+                        }
+                    ],
+                    stream: false,  // 非流式调用
+                    temperature: 0.3,  // 较低的温度，保证标题的稳定性
+                    max_tokens: 20  // 限制token数量，确保简洁
+                },
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.apiKey}`,
+                    },
+                    timeout: 10000  // 10秒超时
+                }
+            );
+
+            // 提取标题
+            const generatedTitle = response.data?.choices?.[0]?.message?.content?.trim();
+
+            if (!generatedTitle) {
+                throw new Error('AI返回了空标题');
+            }
+
+            // 清理标题（移除可能的引号、句号等）
+            const cleanTitle = generatedTitle
+                .replace(/^["'「『]|["'」』]$/g, '')  // 移除首尾引号
+                .replace(/[。！？.!?]$/g, '')  // 移除末尾标点
+                .trim();
+
+            // 长度保护：如果超过20个字符，截断
+            if (cleanTitle.length > 20) {
+                return cleanTitle.substring(0, 20) + '...';
+            }
+
+            return cleanTitle || '新对话';
+
+        } catch (error) {
+            // 容错处理：遇到任何错误时，使用降级策略
+            console.error('AI标题生成失败，使用降级策略:', error.message);
+
+            // 降级策略：使用简单的文本截取
+            if (imageBase64) {
+                return '图片对话';
+            }
+
+            const cleanMessage = message.replace(/\[图片内容描述：.*?\]\n\n/g, '').trim();
+
+            if (cleanMessage.length > 10) {
+                return cleanMessage.substring(0, 10) + '...';
+            }
+
+            return cleanMessage || '新对话';
+        }
+    }
+
+    /**
      * 模拟流式输出效果
      */
     private async simulateStreamOutput(text: string, onChunk: (chunk: string) => void): Promise<void> {

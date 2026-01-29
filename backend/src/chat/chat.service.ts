@@ -140,8 +140,8 @@ export class ChatService {
             }
         }
 
-        // 创建新会话时生成主题
-        const title = this.generateTitle(userMessage || '', imageBase64 || null);
+        // 创建新会话时使用 AI 智能生成主题
+        const title = await this.generateTitle(userMessage || '', imageBase64 || null);
 
         const conversation = this.conversationsRepository.create({
             roleId,
@@ -152,41 +152,57 @@ export class ChatService {
     }
 
     /**
-     * 生成对话主题
+     * AI 智能生成对话主题【核心辅助功能】
      * 
-     * 根据用户的首条消息自动生成对话主题标题。
-     * - 如果是图片消息，显示"图片对话"
-     * - 如果是文本消息，截取前20个字符作为主题
+     * 使用 AI 根据用户的首条消息智能生成简洁且有信息量的对话标题。
+     * 相比简单的文本截取，AI 生成的标题更具概括性和可读性。
+     * 
+     * ## 功能特性
+     * 
+     * 1. **智能理解** - AI 理解消息语义，生成精准的标题
+     * 2. **长度控制** - 自动控制在10字以内，适合侧边栏展示
+     * 3. **多模态支持** - 支持纯文本和图片消息的标题生成
+     * 4. **容错机制** - AI 调用失败时自动降级为文本截取
+     * 
+     * ## 工作流程
+     * 
+     * ```
+     * 接收用户消息
+     *   ↓
+     * 调用 deepseekService.generateTitle()
+     *   ↓
+     * AI 分析并生成标题 (成功)
+     *   ↓
+     * 返回智能标题
+     * 
+     * (如果 AI 调用失败)
+     *   ↓
+     * 自动降级为简单文本截取
+     *   ↓
+     * 返回降级标题
+     * ```
      * 
      * @param message - 用户消息内容
-     * @param imageBase64 - 图片Base64数据（用于判断是否为图片消息）
-     * @returns {string} 对话主题标题
+     * @param imageBase64 - 图片 Base64 数据（可选）
+     * @returns {Promise<string>} 对话主题标题
      * 
      * @example
-     * // 图片消息
-     * generateTitle('请看这张图', 'data:image/...') // → "图片对话"
+     * // 纯文本消息 - AI 智能生成
+     * await generateTitle('帮我写一段Python快速排序代码', null)
+     * // → "Python快速排序"
      * 
-     * // 短文本
-     * generateTitle('你好', null) // → "你好"
+     * // 图片消息 - AI 智能生成
+     * await generateTitle('这是什么动物？', 'data:image/...')
+     * // → "动物识别"
      * 
-     * // 长文本
-     * generateTitle('请帮我分析这段非常复杂的代码结构', null)
-     * // → "请帮我分析这段非常复杂的代码..."
+     * // AI 失败时的降级策略
+     * await generateTitle('很长的一段文本...', null)
+     * // → "很长的一段文本..."
      */
-    private generateTitle(message: string, imageBase64: string | null): string {
-        if (imageBase64) {
-            return '图片对话';
-        }
-
-        // 移除图片描述标记
-        const cleanText = message.replace(/\[图片内容描述：.*?\]\n\n/g, '');
-
-        // 截取前 20 个字符
-        if (cleanText.length > 20) {
-            return cleanText.substring(0, 20) + '...';
-        }
-
-        return cleanText || '新对话';
+    private async generateTitle(message: string, imageBase64: string | null): Promise<string> {
+        // 委托给 deepseekService 的 AI 标题生成方法
+        // 该方法内部已经实现了完整的容错机制
+        return await this.deepseekService.generateTitle(message, imageBase64);
     }
 
     /**
