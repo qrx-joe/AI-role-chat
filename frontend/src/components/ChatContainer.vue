@@ -48,7 +48,7 @@
                 <img :src="chatStore.parseMessageContent(msg.content).image" alt="Upload" />
               </div>
             </template>
-            <div class="text-content">{{ cleanText(chatStore.parseMessageContent(msg.content).text) }}</div>
+            <span class="text-content">{{ cleanText(chatStore.parseMessageContent(msg.content).text) }}</span>
           </div>
         </div>
       </div>
@@ -359,20 +359,6 @@ function cleanText(text) {
   white-space: pre-wrap;
   font-family: var(--font-body);
 }
-
-.is-typing .message-bubble::after {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 16px;
-  background: var(--primary);
-  margin-left: 6px;
-  vertical-align: middle;
-  animation: blink 0.8s infinite;
-  border-radius: 2px;
-}
-
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
 .input-panel {
   padding: 24px 32px 32px; /* 底部留多一点 */
