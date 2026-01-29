@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 
@@ -14,6 +14,16 @@ export class RolesController {
             code: 201,
             message: '角色创建成功',
             data: role,
+        };
+    }
+
+    @Patch('order')
+    async updateOrders(@Body() orderData: { id: string, order: number }[]) {
+        await this.rolesService.updateOrders(orderData);
+        return {
+            code: 200,
+            message: '排序更新成功',
+            data: null,
         };
     }
 

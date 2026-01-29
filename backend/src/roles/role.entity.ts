@@ -25,6 +25,9 @@ export class Role {
   @Column('text', { nullable: true })
   avatar: string;
 
+  @Column({ type: 'int', default: 0 })
+  order: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

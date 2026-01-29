@@ -18,8 +18,17 @@ export class RolesService {
 
     async findAll(): Promise<Role[]> {
         return await this.rolesRepository.find({
-            order: { createdAt: 'DESC' },
+            order: {
+                order: 'ASC',
+                createdAt: 'DESC'
+            },
         });
+    }
+
+    async updateOrders(orderData: { id: string, order: number }[]): Promise<void> {
+        for (const item of orderData) {
+            await this.rolesRepository.update(item.id, { order: item.order });
+        }
     }
 
     async findOne(id: string): Promise<Role> {

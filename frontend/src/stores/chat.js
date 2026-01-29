@@ -221,6 +221,17 @@ export const useChatStore = defineStore('chat', () => {
         localStorage.setItem('user_avatar', url);
     }
 
+    async function updateRoleOrder(orderData) {
+        try {
+            await roleApi.updateOrder(orderData);
+            // Refresh local list to ensure correct sorting
+            await loadRoles();
+        } catch (error) {
+            console.error('更新排序失败:', error);
+            throw error;
+        }
+    }
+
     return {
         roles,
         currentRole,
@@ -246,5 +257,6 @@ export const useChatStore = defineStore('chat', () => {
         deleteRole,
         sendMessage,
         startNewChat,
+        updateRoleOrder,
     };
 });

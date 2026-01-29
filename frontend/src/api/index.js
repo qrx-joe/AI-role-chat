@@ -25,6 +25,7 @@ export const roleApi = {
     create: (data) => apiClient.post('/roles', data),
     update: (id, data) => apiClient.put(`/roles/${id}`, data),
     delete: (id) => apiClient.delete(`/roles/${id}`),
+    updateOrder: (orderData) => apiClient.patch('/roles/order', orderData),
 };
 
 export const conversationApi = {

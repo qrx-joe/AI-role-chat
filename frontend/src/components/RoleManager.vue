@@ -25,30 +25,42 @@
        </div>
     </div>
 
-    <!-- Top Right Floating User Profile -->
-    <div v-if="grid" class="user-profile-widget" @click="openUserAvatarDialog" title="设置我的头像">
-      <div class="widget-avatar">
-        <img :src="chatStore.userAvatar" alt="User" />
+    <!-- Top Right Floating Widgets -->
+    <div v-if="grid" class="home-widgets">
+      <div class="widget-item" @click="toggleSortMode" :class="{ 'is-active': isSortMode }" title="对角色进行排序">
+        <div class="widget-icon">⇅</div>
+        <span class="widget-label">{{ isSortMode ? '完成排序' : '调整顺序' }}</span>
       </div>
-      <span class="widget-label">我的形象</span>
+      <div class="widget-item" @click="openUserAvatarDialog" title="设置我的头像">
+        <div class="widget-avatar">
+          <img :src="chatStore.userAvatar" alt="User" />
+        </div>
+        <span class="widget-label">我的形象</span>
+      </div>
     </div>
 
     <!-- Grid Mode & List Mode -->
-    <div v-if="!compact" class="role-list" :class="{ 'grid-view': grid }">
+    <div v-if="!compact" class="role-list" :class="{ 'grid-view': grid, 'is-sorting': isSortMode }">
       <!-- Create Button Card (Only in Grid Mode) -->
-      <div v-if="grid" class="role-card create-card" @click="openCreateDialog">
+      <div v-if="grid && !isSortMode" class="role-card create-card" @click="openCreateDialog">
         <div class="create-icon">+</div>
         <h3>创建新角色</h3>
         <p class="create-desc">设计属于你的 AI 伙伴</p>
       </div>
 
       <div
-        v-for="role in chatStore.roles"
+        v-for="(role, index) in localRoles"
         :key="role.id"
         class="role-card"
-        :class="{ active: chatStore.currentRole?.id === role.id }"
-        @click="chatStore.selectRole(role)"
+        :class="{ active: chatStore.currentRole?.id === role.id, 'sorting-item': isSortMode }"
+        @click="handleCardClick(role)"
       >
+        <!-- Reorder Buttons -->
+        <div v-if="isSortMode" class="reorder-actions">
+           <button class="btn-reorder" @click.stop="moveRole(index, -1)" :disabled="index === 0">←</button>
+           <button class="btn-reorder" @click.stop="moveRole(index, 1)" :disabled="index === localRoles.length - 1">→</button>
+        </div>
+
         <img 
           :src="getAvatarUrl(role)" 
           class="role-avatar-img" 
@@ -57,7 +69,7 @@
         />
         <h3>{{ role.name }}</h3>
         <!-- <p class="personality">{{ role.personality }}</p> 用户要求隐藏 -->
-        <div class="card-actions">
+        <div v-if="!isSortMode" class="card-actions">
           <button class="btn-edit" @click.stop="openEditDialog(role)" title="编辑角色">📝</button>
           <button class="btn-delete" @click.stop="handleDelete(role.id)" title="删除角色">🗑️</button>
         </div>
@@ -158,7 +170,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps } from 'vue';
+import { ref, defineProps, computed, watch, onMounted } from 'vue';
 import { useChatStore } from '../stores/chat';
 
 const props = defineProps({
@@ -185,6 +197,53 @@ const roleForm = ref({
   examples: '',
   avatar: ''
 });
+
+// Ordering Logic
+const isSortMode = ref(false);
+const localRoles = ref([]);
+
+// Keep localRoles synced with store roles when not sorting
+watch(() => chatStore.roles, (newRoles) => {
+  if (!isSortMode.value) {
+    localRoles.value = [...newRoles];
+  }
+}, { immediate: true, deep: true });
+
+async function toggleSortMode() {
+  if (isSortMode.value) {
+    // Exiting sort mode: Save to backend
+    try {
+      const orderData = localRoles.value.map((role, index) => ({
+        id: role.id,
+        order: index
+      }));
+      await chatStore.updateRoleOrder(orderData);
+      isSortMode.value = false;
+    } catch (error) {
+      alert('保存顺序失败，请重试');
+    }
+  } else {
+    // Entering sort mode
+    localRoles.value = [...chatStore.roles];
+    isSortMode.value = true;
+  }
+}
+
+function moveRole(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= localRoles.value.length) return;
+  
+  const items = [...localRoles.value];
+  const temp = items[index];
+  items[index] = items[newIndex];
+  items[newIndex] = temp;
+  localRoles.value = items;
+}
+
+function handleCardClick(role) {
+  if (isSortMode.value) return;
+  chatStore.selectRole(role);
+}
 
 function openCreateDialog() {
   isEditing.value = false;
@@ -506,30 +565,59 @@ function getInitials(name) {
   object-fit: cover;
 }
 
-/* User Card Utility replacement: Floating Widget */
-.user-profile-widget {
+/* Top Right Home Widgets Box */
+.home-widgets {
   position: fixed;
   top: 24px;
   right: 24px;
   display: flex;
-  align-items: center;
   gap: 12px;
+  z-index: 1000;
+}
+
+.widget-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 8px 16px 8px 8px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 40px;
   cursor: pointer;
-  z-index: 1000;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
   box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
-.user-profile-widget:hover {
+.widget-item:hover {
   transform: translateY(-2px);
   background: white;
   box-shadow: 0 8px 25px rgba(0,0,0,0.1);
   border-color: var(--primary-glow);
+}
+
+.widget-item.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.widget-item.is-active .widget-icon,
+.widget-item.is-active .widget-label {
+  color: white;
+  -webkit-text-fill-color: white;
+}
+
+.widget-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .widget-avatar {
@@ -555,6 +643,67 @@ function getInitials(name) {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Sorting Mode Effects */
+.role-list.is-sorting .role-card:not(.sorting-item) {
+   opacity: 0.5;
+   pointer-events: none;
+}
+
+.role-card.sorting-item {
+   border: 2px solid var(--primary);
+   animation: shake 0.5s infinite ease-in-out;
+}
+
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(0.5deg); }
+  75% { transform: rotate(-0.5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.reorder-actions {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  z-index: 10;
+}
+
+.btn-reorder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.2s;
+}
+
+.btn-reorder:hover:not(:disabled) {
+  transform: scale(1.1);
+  background: #6d28d9;
+}
+
+.btn-reorder:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* User Card Utility replacement: DEPRECATED by home-widgets */
+.user-profile-widget {
+  display: none;
 }
 
 /* Keep existing list styles for sidebar mode */
