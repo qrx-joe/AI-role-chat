@@ -2,28 +2,124 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
+/**
+ * 聊天消息接口
+ * 
+ * 定义AI对话中的消息格式，支持纯文本和多模态（文本+图片）内容
+ * 
+ * @interface ChatMessage
+ */
 export interface ChatMessage {
+    /** 
+     * 消息角色
+     * - system: 系统提示词，定义AI的行为和性格
+     * - user: 用户发送的消息
+     * - assistant: AI助手的回复
+     */
     role: 'system' | 'user' | 'assistant';
+
+    /** 
+     * 消息内容
+     * 
+     * 可以是以下两种格式：
+     * 1. 纯文本字符串 - 用于普通文本对话
+     * 2. 内容数组 - 用于多模态消息（文本+图片）
+     *    - type: 'text' - 文本块，包含 text 属性
+     *    - type: 'image_url' - 图片块，包含 image_url.url 属性（Base64编码）
+     * 
+     * @example
+     * // 纯文本
+     * content: "你好，请帮我分析这段代码"
+     * 
+     * @example
+     * // 多模态（文本+图片）
+     * content: [
+     *   { type: 'text', text: '请看这张图片' },
+     *   { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,...' } }
+     * ]
+     */
     content: string | Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string } }>;
 }
 
+/**
+ * DeepSeek AI 服务类
+ * 
+ * 这是整个AI对话系统的核心服务，负责与AI模型进行交互。
+ * 主要功能包括：
+ * 
+ * 1. **文本对话** - 使用 DeepSeek 模型进行角色扮演对话
+ * 2. **图片识别** - 使用智谱 GLM-4V 模型识别图片内容
+ * 3. **两阶段图片处理** - 分离视觉识别和角色扮演，提升回复质量
+ * 
+ * ## 两阶段图片处理架构
+ * 
+ * 为了解决AI在处理图片时角色性格被稀释的问题，采用了两阶段处理：
+ * 
+ * ```
+ * 用户发送图片
+ *   ↓
+ * 【阶段1】GLM-4V 纯图片识别
+ *   - 使用简洁的识别提示词
+ *   - 获取客观的图片描述
+ *   - 不涉及角色扮演
+ *   ↓
+ * 【阶段2】DeepSeek 角色扮演
+ *   - 将图片描述作为纯文本输入
+ *   - 结合完整的角色 System Prompt
+ *   - 生成符合角色性格的回复
+ *   ↓
+ * 返回最终结果
+ * ```
+ * 
+ * @class DeepseekService
+ * @decorator @Injectable() - NestJS依赖注入装饰器
+ */
 @Injectable()
 export class DeepseekService {
+    // ==================== 私有属性 ====================
+
+    /** DeepSeek API 密钥 - 用于文本对话 */
     private apiKey: string;
+
+    /** DeepSeek API 基础URL */
     private baseUrl: string;
 
+    /** 智谱 AI API 密钥 - 用于图片识别 */
     private zhipuApiKey: string;
+
+    /** 智谱 AI API 基础URL */
     private zhipuBaseUrl: string;
+
+    /** 智谱 AI 使用的模型名称 */
     private zhipuModel: string;
 
+    /**
+     * 构造函数 - 初始化AI服务配置
+     * 
+     * 从环境变量中读取API配置，并进行基本的有效性检查。
+     * 如果API Key未配置或使用默认值，会输出警告信息。
+     * 
+     * @param configService - NestJS配置服务，用于读取环境变量
+     * 
+     * @example
+     * // 环境变量配置（.env文件）
+     * DEEPSEEK_API_KEY=sk-xxxxx
+     * DEEPSEEK_BASE_URL=https://api.deepseek.com
+     * ZHIPU_API_KEY=xxxxx.xxxxxx
+     * ZHIPU_BASE_URL=https://open.bigmodel.cn/api/paas/v4/
+     * ZHIPU_MODEL=glm-4v-flash
+     */
     constructor(private configService: ConfigService) {
+        // 初始化 DeepSeek 配置
         this.apiKey = this.configService.get<string>('DEEPSEEK_API_KEY') || '';
         this.baseUrl = this.configService.get<string>('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com';
 
+        // 初始化智谱 AI 配置
         this.zhipuApiKey = this.configService.get<string>('ZHIPU_API_KEY') || '';
         this.zhipuBaseUrl = this.configService.get<string>('ZHIPU_BASE_URL') || 'https://open.bigmodel.cn/api/paas/v4/';
         this.zhipuModel = this.configService.get<string>('ZHIPU_MODEL') || 'glm-4v-flash';
 
+        // API Key 有效性检查
         if (!this.apiKey || this.apiKey === 'your_api_key_here') {
             console.warn('⚠️  警告: DeepSeek API Key 未配置');
         }
