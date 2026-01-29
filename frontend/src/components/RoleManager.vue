@@ -27,10 +27,6 @@
 
     <!-- Top Right Floating Widgets -->
     <div v-if="grid" class="home-widgets">
-      <div class="widget-item" @click="toggleSortMode" :class="{ 'is-active': isSortMode }" title="对角色进行排序">
-        <div class="widget-icon">⇅</div>
-        <span class="widget-label">{{ isSortMode ? '完成排序' : '调整顺序' }}</span>
-      </div>
       <div class="widget-item" @click="openUserAvatarDialog" title="设置我的头像">
         <div class="widget-avatar">
           <img :src="chatStore.userAvatar" alt="User" />
@@ -40,9 +36,9 @@
     </div>
 
     <!-- Grid Mode & List Mode -->
-    <div v-if="!compact" class="role-list" :class="{ 'grid-view': grid, 'is-sorting': isSortMode }">
+    <div v-if="!compact" class="role-list" :class="{ 'grid-view': grid }">
       <!-- Create Button Card (Only in Grid Mode) -->
-      <div v-if="grid && !isSortMode" class="role-card create-card" @click="openCreateDialog">
+      <div v-if="grid" class="role-card create-card" @click="openCreateDialog">
         <div class="create-icon">+</div>
         <h3>创建新角色</h3>
         <p class="create-desc">设计属于你的 AI 伙伴</p>
@@ -52,15 +48,17 @@
         v-for="(role, index) in localRoles"
         :key="role.id"
         class="role-card"
-        :class="{ active: chatStore.currentRole?.id === role.id, 'sorting-item': isSortMode }"
+        :class="{ 
+          active: chatStore.currentRole?.id === role.id, 
+          'is-dragging': draggedIndex === index 
+        }"
+        :draggable="grid"
         @click="handleCardClick(role)"
+        @dragstart="handleDragStart(index)"
+        @dragenter.prevent="handleDragEnter(index)"
+        @dragover.prevent
+        @dragend="handleDragEnd"
       >
-        <!-- Reorder Buttons -->
-        <div v-if="isSortMode" class="reorder-actions">
-           <button class="btn-reorder" @click.stop="moveRole(index, -1)" :disabled="index === 0">←</button>
-           <button class="btn-reorder" @click.stop="moveRole(index, 1)" :disabled="index === localRoles.length - 1">→</button>
-        </div>
-
         <img 
           :src="getAvatarUrl(role)" 
           class="role-avatar-img" 
@@ -69,7 +67,7 @@
         />
         <h3>{{ role.name }}</h3>
         <!-- <p class="personality">{{ role.personality }}</p> 用户要求隐藏 -->
-        <div v-if="!isSortMode" class="card-actions">
+        <div class="card-actions">
           <button class="btn-edit" @click.stop="openEditDialog(role)" title="编辑角色">📝</button>
           <button class="btn-delete" @click.stop="handleDelete(role.id)" title="删除角色">🗑️</button>
         </div>
@@ -199,49 +197,49 @@ const roleForm = ref({
 });
 
 // Ordering Logic
-const isSortMode = ref(false);
 const localRoles = ref([]);
+const draggedIndex = ref(null);
 
-// Keep localRoles synced with store roles when not sorting
+// Keep localRoles synced with store roles when not dragging
 watch(() => chatStore.roles, (newRoles) => {
-  if (!isSortMode.value) {
+  if (draggedIndex.value === null) {
     localRoles.value = [...newRoles];
   }
 }, { immediate: true, deep: true });
 
-async function toggleSortMode() {
-  if (isSortMode.value) {
-    // Exiting sort mode: Save to backend
-    try {
-      const orderData = localRoles.value.map((role, index) => ({
-        id: role.id,
-        order: index
-      }));
-      await chatStore.updateRoleOrder(orderData);
-      isSortMode.value = false;
-    } catch (error) {
-      alert('保存顺序失败，请重试');
-    }
-  } else {
-    // Entering sort mode
-    localRoles.value = [...chatStore.roles];
-    isSortMode.value = true;
+function handleDragStart(index) {
+  draggedIndex.value = index;
+}
+
+function handleDragEnter(index) {
+  if (draggedIndex.value === null || draggedIndex.value === index) return;
+  
+  // Swap items in local array for immediate visual feedback
+  const items = [...localRoles.value];
+  const temp = items[draggedIndex.value];
+  items.splice(draggedIndex.value, 1);
+  items.splice(index, 0, temp);
+  
+  localRoles.value = items;
+  draggedIndex.value = index;
+}
+
+async function handleDragEnd() {
+  draggedIndex.value = null;
+  // Auto-save the new order to backend
+  try {
+    const orderData = localRoles.value.map((role, index) => ({
+      id: role.id,
+      order: index
+    }));
+    await chatStore.updateRoleOrder(orderData);
+  } catch (error) {
+    console.error('自动保存排序失败:', error);
   }
 }
 
-function moveRole(index, direction) {
-  const newIndex = index + direction;
-  if (newIndex < 0 || newIndex >= localRoles.value.length) return;
-  
-  const items = [...localRoles.value];
-  const temp = items[index];
-  items[index] = items[newIndex];
-  items[newIndex] = temp;
-  localRoles.value = items;
-}
-
 function handleCardClick(role) {
-  if (isSortMode.value) return;
+  // Click still works normally
   chatStore.selectRole(role);
 }
 
@@ -663,47 +661,23 @@ function getInitials(name) {
   100% { transform: rotate(0deg); }
 }
 
-.reorder-actions {
-  position: absolute;
-  top: 10px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  z-index: 10;
+.grid-view .role-card {
+  cursor: grab;
 }
 
-.btn-reorder {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  transition: all 0.2s;
+.grid-view .role-card:active {
+  cursor: grabbing;
 }
 
-.btn-reorder:hover:not(:disabled) {
-  transform: scale(1.1);
-  background: #6d28d9;
+.role-card.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+  border: 2px dashed var(--primary);
+  background: rgba(var(--primary-rgb), 0.05);
 }
 
-.btn-reorder:disabled {
-  background: #cbd5e1;
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* User Card Utility replacement: DEPRECATED by home-widgets */
-.user-profile-widget {
-  display: none;
+.drag-handle-hint {
+  display: none; /* Removed for seamless look */
 }
 
 /* Keep existing list styles for sidebar mode */
