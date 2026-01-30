@@ -578,11 +578,13 @@ function getInitials(name) {
 }
 
 .create-icon {
-  font-size: 3rem;
-  color: var(--primary);
-  opacity: 0.8;
-  margin-bottom: 8px;
+  font-size: 4.5rem;
+  color: var(--primary); /* Revert to purple */
+  opacity: 0.9;
+  margin-bottom: 12px;
   line-height: 1;
+  font-weight: 200; /* Ultra light */
+  transition: transform 0.3s ease;
 }
 
 .create-desc {
