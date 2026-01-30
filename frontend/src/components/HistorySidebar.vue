@@ -49,7 +49,7 @@
 
        <!-- 开启新对话 -->
        <button class="btn-new-chat-compact" @click="startNewChatCurrentRole" title="开启新对话">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
@@ -76,7 +76,7 @@
           <div class="role-actions">
             <!-- 直接在这个分组下开启新对话 -->
             <button class="btn-group-action" @click="handleNewChat(group.roleId)" title="与此角色开始新对话">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>
           </div>
         </div>
@@ -375,9 +375,9 @@ function startNewChatCurrentRole() {
 }
 
 .btn-new-chat-compact {
-  width: 44px; /* Slightly smaller to fit gracefully */
-  height: 44px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px; /* Consistent with other sidebar icons */
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
   color: white;
   border: none;
@@ -450,28 +450,27 @@ function startNewChatCurrentRole() {
 }
 
 .btn-group-action {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  width: 22px;
-  height: 22px;
-  border-radius: 4px; /* Square with slight round */
+  width: 32px;
+  height: 32px;
+  border-radius: 8px; /* Consistent with other sidebar icons */
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
+  color: white;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-size: 14px;
   font-weight: 300;
   line-height: 1;
   padding: 0;
-  transition: all 0.2s;
 }
 
 .btn-group-action:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 8px 16px rgba(139, 92, 246, 0.4);
 }
 
 .count {
