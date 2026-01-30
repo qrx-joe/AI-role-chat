@@ -20,13 +20,16 @@
       进入特定的角色对话界面，展示左侧历史侧边栏和右侧聊天主体。
     -->
     <template v-else>
-      <aside class="sidebar">
-        <div class="role-header-wrapper">
+      <aside class="sidebar" :class="{ 'is-collapsed': isSidebarCollapsed }">
+        <div class="role-header-wrapper" v-show="!isSidebarCollapsed">
           <!-- 在侧边栏中使用 compact 模式展示当前正在对话的角色 -->
           <RoleManager :compact="true" />
         </div>
         <!-- 侧边栏历史记录列表 -->
-        <HistorySidebar />
+        <HistorySidebar 
+          :collapsed="isSidebarCollapsed" 
+          @toggle="isSidebarCollapsed = !isSidebarCollapsed"
+        />
       </aside>
       <main class="main-content">
         <!-- 对话框主体：消息列表与输入框 -->
@@ -37,7 +40,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import RoleManager from './components/RoleManager.vue';
 import ChatContainer from './components/ChatContainer.vue';
 import HistorySidebar from './components/HistorySidebar.vue';
@@ -51,6 +54,7 @@ import { useChatStore } from './stores/chat';
  * 2. 在组件挂载时初始化全局角色列表。
  */
 const chatStore = useChatStore();
+const isSidebarCollapsed = ref(false);
 
 // 应用初始化：加载所有后端存储的角色信息
 onMounted(() => {
@@ -136,6 +140,12 @@ onMounted(() => {
   overflow: hidden;
   animation: slideInLeft 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   z-index: 10;
+  transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), flex 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sidebar.is-collapsed {
+  width: 72px;
+  flex: 0 0 72px;
 }
 
 .role-header-wrapper {

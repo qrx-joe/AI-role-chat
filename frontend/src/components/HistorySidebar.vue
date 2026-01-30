@@ -1,10 +1,18 @@
 <template>
-  <div class="history-sidebar">
+  <div class="history-sidebar" :class="{ 'is-collapsed': collapsed }">
     <!-- 侧边栏头部：标题与刷新动作 -->
     <div class="header">
-      <h3>历史对话</h3>
+      <h3 v-if="!collapsed">历史对话</h3>
+      
       <div class="header-actions">
-        <button class="btn-refresh" @click="chatStore.loadConversations" title="刷新列表">
+        <!-- 展开/收起按钮 -->
+        <button class="btn-toggle" @click="$emit('toggle')" :title="collapsed ? '展开侧边栏' : '收起侧边栏'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotate-180': collapsed }">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <button v-if="!collapsed" class="btn-refresh" @click="chatStore.loadConversations" title="刷新列表">
           <!-- 顺时针旋转图标 -->
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 2v6h-6"></path>
@@ -16,7 +24,17 @@
       </div>
     </div>
     
-    <div class="conversation-list">
+    <!-- 折叠后的简易操作区：只显示一个巨大的“开启新对话”按钮 -->
+    <div v-if="collapsed" class="collapsed-actions">
+       <button class="btn-new-chat-compact" @click="startNewChatCurrentRole" title="开启新对话">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+       </button>
+    </div>
+
+    <div v-else class="conversation-list">
       <!-- 渲染分组后的对话：同一角色的对话聚拢在一起 -->
       <div 
         v-for="group in groupedConversations" 
@@ -65,7 +83,7 @@
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
             </button>
           </div>
@@ -76,8 +94,17 @@
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue';
+import { onMounted, computed, defineProps, defineEmits } from 'vue';
 import { useChatStore } from '../stores/chat';
+
+const props = defineProps({
+  collapsed: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const emit = defineEmits(['toggle']);
 
 /**
  * 历史侧边栏管理组件
@@ -192,6 +219,16 @@ async function handleNewChat(roleId) {
      chatStore.startNewChat(role);
   }
 }
+
+/**
+ * 侧边栏折叠时的新对话逻辑
+ * 默认使用当前选中的角色开启新对话
+ */
+function startNewChatCurrentRole() {
+  if (chatStore.currentRole) {
+    handleNewChat(chatStore.currentRole.id);
+  }
+}
 </script>
 
 <style scoped>
@@ -209,6 +246,11 @@ async function handleNewChat(roleId) {
   margin-bottom: 24px;
 }
 
+.history-sidebar.is-collapsed .header {
+  margin-bottom: 12px;
+  justify-content: center;
+}
+
 .header h3 {
   font-family: var(--font-heading);
   font-size: 0.85rem;
@@ -221,6 +263,34 @@ async function handleNewChat(roleId) {
 .header-actions {
   display: flex;
   gap: 8px;
+}
+
+.btn-toggle {
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.btn-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+
+.btn-toggle svg {
+  transition: transform 0.3s;
+}
+
+.btn-toggle svg.rotate-180 {
+  transform: rotate(180deg);
 }
 
 .btn-refresh {
@@ -237,6 +307,36 @@ async function handleNewChat(roleId) {
   transition: all 0.3s;
   color: var(--primary);
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+/* Collapsed Compact Mode & Actions */
+.collapsed-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.btn-new-chat-compact {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px var(--primary-glow);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin-top: 8px;
+}
+
+.btn-new-chat-compact:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px var(--primary-glow);
 }
 
 .btn-refresh:hover {
