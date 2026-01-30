@@ -15,7 +15,12 @@
             class="header-avatar" 
             alt="Role Avatar"
           />
-          <h2>{{ chatStore.currentRole.name }}</h2>
+          <div class="role-text">
+            <h2>{{ chatStore.currentRole.name }}</h2>
+            <div v-if="chatStore.currentConversation?.title" class="role-subtitle">
+              {{ chatStore.currentConversation.title }}
+            </div>
+          </div>
         </div>
         <div class="header-actions">
           <button class="btn-tool" @click="chatStore.togglePromptPreview" title="查看系统提示词">📜 Prompt</button>
@@ -276,10 +281,23 @@ function cleanText(text) {
 .role-info h2 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.2rem; /* Slightly smaller to fit avatar */
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.role-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.role-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 2px;
 }
 
 .role-badge { 

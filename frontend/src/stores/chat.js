@@ -47,6 +47,12 @@ export const useChatStore = defineStore('chat', () => {
     /** 是否已选中某个角色 */
     const hasSelectedRole = computed(() => !!currentRole.value);
 
+    /** 当前选中的会话对象 (Computed) */
+    const currentConversation = computed(() => {
+        if (!currentConversationId.value) return null;
+        return conversations.value.find(c => c.id === currentConversationId.value);
+    });
+
     // ==================== 辅助工具 (Helpers) ====================
 
     /**
@@ -300,6 +306,7 @@ export const useChatStore = defineStore('chat', () => {
         currentRole,
         conversations,
         currentConversationId,
+        currentConversation,
         messages,
         isStreaming,
         showPromptPreview,
