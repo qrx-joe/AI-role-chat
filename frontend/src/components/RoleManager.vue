@@ -12,7 +12,7 @@
       <button v-if="compact" class="btn-back" @click="chatStore.selectRole(null)">
         ← 返回角色列表
       </button>
-      <button v-else class="btn-create" @click="openCreateDialog">+ 创建角色</button>
+      <button v-else class="btn-create" @click="openCreateDialog">+ 唤醒新角色</button>
     </div>
 
     <!-- Compact Mode: Only show active role -->
@@ -40,8 +40,8 @@
       <!-- Create Button Card (Only in Grid Mode) -->
       <div v-if="grid" class="role-card create-card" @click="openCreateDialog">
         <div class="create-icon">+</div>
-        <h3>创建新角色</h3>
-        <p class="create-desc">设计属于你的 AI 伙伴</p>
+        <h3>唤醒新角色</h3>
+        <p class="create-desc">执笔编织一段新的角色灵魂</p>
       </div>
 
       <div

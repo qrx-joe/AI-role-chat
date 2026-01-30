@@ -6,8 +6,8 @@
     -->
     <main v-if="!chatStore.currentRole" class="home-layout">
        <div class="home-header">
-          <h1>选择你的 AI 伙伴</h1>
-          <p>开启一段新的对话旅程</p>
+          <h1>跃然 AI</h1>
+          <p>邂逅你的数字伙伴，开启一段新的灵魂旅程...</p>
        </div>
        <div class="home-content">
           <!-- 传入 grid 属性，让 RoleManager 渲染为精美的大网格布局 -->
