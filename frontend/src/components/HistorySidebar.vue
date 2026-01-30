@@ -5,13 +5,6 @@
       <h3 v-if="!collapsed">历史对话</h3>
       
       <div class="header-actions">
-        <!-- 展开/收起按钮 -->
-        <button class="btn-toggle" @click="$emit('toggle')" :title="collapsed ? '展开侧边栏' : '收起侧边栏'">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :class="{ 'rotate-180': collapsed }">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-
         <button v-if="!collapsed" class="btn-refresh" @click="chatStore.loadConversations" title="刷新列表">
           <!-- 顺时针旋转图标 -->
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -21,15 +14,33 @@
             <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
           </svg>
         </button>
+
+        <!-- 展开/收起侧边栏按钮（参考大厂设计：简洁的 Panel Icon） -->
+        <button class="btn-toggle" @click="$emit('toggle')" :title="collapsed ? '展开侧边栏' : '收起侧边栏'">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </button>
       </div>
     </div>
     
-    <!-- 折叠后的简易操作区：只显示一个巨大的“开启新对话”按钮 -->
+    <!-- 折叠后的简易操作区 -->
     <div v-if="collapsed" class="collapsed-actions">
+       <div class="divider"></div>
+       <!-- 开启新对话 -->
        <button class="btn-new-chat-compact" @click="startNewChatCurrentRole" title="开启新对话">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+       </button>
+       
+       <!-- 返回角色列表 -->
+       <button class="btn-back-compact" @click="chatStore.selectRole(null)" title="返回角色列表">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
        </button>
     </div>
@@ -266,23 +277,35 @@ function startNewChatCurrentRole() {
 }
 
 .btn-toggle {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
+  background: white; /* 醒目的白色卡片背景 */
+  border: 1px solid var(--border-subtle); /* 细腻的边框 */
+  color: var(--text-main);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px; /* 更圆润的方角 */
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Q弹的动画 */
   padding: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04); /* 增加投影 */
 }
 
 .btn-toggle:hover {
-  background: var(--surface-hover);
+  background: white;
   color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px); /* 悬停上浮 */
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15); /* 更有质感的发光投影 */
+}
+
+.history-sidebar.is-collapsed .btn-toggle {
+   /* Optional: Distinct style when collapsed if needed, but keeping it uniform is cleaner */
+}
+
+.history-sidebar.is-collapsed .btn-toggle {
+   /* Optional: Distinct style when collapsed if needed, but keeping it uniform is cleaner */
 }
 
 .btn-toggle svg {
@@ -294,49 +317,75 @@ function startNewChatCurrentRole() {
 }
 
 .btn-refresh {
-  background: white;
-  border: 1px solid var(--primary-glow);
+  background: transparent; /* Cleaner look */
+  border: none;
   cursor: pointer;
-  font-size: 0.9rem;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s;
-  color: var(--primary);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  color: var(--text-muted);
 }
 
-/* Collapsed Compact Mode & Actions */
+.btn-refresh:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--primary);
+  transform: rotate(180deg);
+  box-shadow: none;
+}
+
 .collapsed-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 12px;
+  padding-top: 20px;
+  gap: 16px;
   border-top: 1px solid var(--border-subtle);
+  width: 100%;
 }
 
 .btn-new-chat-compact {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
   color: white;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px var(--primary-glow);
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  margin-top: 8px;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .btn-new-chat-compact:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 16px var(--primary-glow);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 8px 16px rgba(139, 92, 246, 0.4);
+}
+
+.btn-back-compact {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-back-compact:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+  border-color: var(--border-subtle);
+  transform: translateX(-2px);
 }
 
 .btn-refresh:hover {
