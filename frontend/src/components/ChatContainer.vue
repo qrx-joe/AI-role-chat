@@ -267,11 +267,15 @@ function cleanText(text) {
   transform: translateY(-1px);
 }
 
-.role-info { display: flex; align-items: center; gap: 12px; }
+.role-info { 
+  display: flex; 
+  align-items: center; 
+  gap: 14px; /* Increased gap for better breathing room */
+}
 
 .header-avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px; /* Increased from 32px to balance double-line text */
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid white;
@@ -281,23 +285,25 @@ function cleanText(text) {
 .role-info h2 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.2rem;
+  font-size: 1.1rem; /* Slightly refined size */
   font-weight: 700;
   color: var(--text-main);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   line-height: 1.2;
 }
 
 .role-text {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  gap: 6px; /* Increased gap for wider spacing */
 }
 
 .role-subtitle {
   font-size: 0.8rem;
   color: var(--text-muted);
-  font-weight: 500;
-  margin-top: 2px;
+  font-weight: 400; /* Regular weight for better contrast */
+  opacity: 0.85;
 }
 
 .role-badge { 
