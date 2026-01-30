@@ -4,8 +4,23 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * 文件上传控制器
+ * 
+ * 负责处理用户上传的图片文件（如自定义头像或聊天中的图片）。
+ * 使用 Multer 进行磁盘存储管理。
+ */
 @Controller('api/upload')
 export class UploadController {
+    /**
+     * 上传单张图片
+     * 
+     * 包含以下逻辑：
+     * 1. **存储定位**：保存至 ./public/uploads 目录。
+     * 2. **重命名**：使用 UUID 生成唯一文件名，防止冲突。
+     * 3. **格式过滤**：仅限常见图片格式。
+     * 4. **大小限制**：最大 5MB。
+     */
     @Post()
     @UseInterceptors(
         FileInterceptor('file', {
@@ -34,6 +49,7 @@ export class UploadController {
             throw new HttpException('未选择文件', HttpStatus.BAD_REQUEST);
         }
 
+        // 返回文件在服务器上的相对访问路径
         const fileUrl = `/uploads/${file.filename}`;
         return {
             code: 200,

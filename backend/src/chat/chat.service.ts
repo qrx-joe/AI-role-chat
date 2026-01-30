@@ -244,7 +244,16 @@ export class ChatService {
     }
 
     /**
-     * 流式对话
+     * 流式对话核心逻辑【业务编排层】
+     * 
+     * 协调从参数校验、会话管理、历史加载、图片识别到流式输出的全过程。
+     * 
+     * @param roleId 角色识别码
+     * @param userMessage 用户文本
+     * @param conversationId 可选的会话 ID
+     * @param imageBase64 可选的图片数据
+     * @param onChunk 文本片段回调
+     * @param onError 错误回调
      */
     async streamChat(
         roleId: string,
@@ -254,29 +263,29 @@ export class ChatService {
         onChunk: (chunk: string) => void,
         onError: (error: Error) => void,
     ): Promise<{ conversationId: string }> {
-        // 1. 获取角色信息
+        // --- 1. 参数预处理与角色校验 ---
         const role = await this.rolesRepository.findOne({ where: { id: roleId } });
         if (!role) {
             throw new Error('角色不存在');
         }
 
-        // 2. 获取或创建会话（传入消息和图片信息用于生成主题）
+        // --- 2. 会话管理 (自动创建或加载旧对话) ---
         const conversation = await this.getOrCreateConversation(roleId, conversationId || undefined, userMessage, imageBase64);
 
-        // 3. 获取历史消息
+        // --- 3. 上下文加载 (加载最近 10 条消息以保证 AI 有记忆) ---
         const recentMessages = await this.getRecentMessages(conversation.id);
-        recentMessages.reverse(); // 按时间正序排列
+        recentMessages.reverse(); // 数据库是倒序查的，这里转回正序
 
-        // 4. 构建消息数组
+        // --- 4. 构建 AI 消息链 ---
         const messages: ChatMessage[] = [];
 
-        // System Prompt
+        // 注入 System Prompt (告诉 AI 它是谁，性格如何)
         messages.push({
             role: 'system',
             content: this.buildSystemPrompt(role),
         });
 
-        // 历史对话
+        // 注入历史消息
         for (const msg of recentMessages) {
             messages.push({
                 role: msg.role === MessageRole.USER ? 'user' : 'assistant',
@@ -284,27 +293,30 @@ export class ChatService {
             });
         }
 
-        // 当前用户消息（支持图片 - 两阶段处理）
+        // --- 5. 处理当前消息 (核心：两阶段图片处理) ---
         if (imageBase64) {
-            // 【阶段1】使用 GLM-4V 纯图片识别
+            // 【阶段 1】视觉识别：剥离性格，纯粹看图
             console.log('📸 检测到图片，启动两阶段处理...');
             const imageContent = [
                 { type: 'text' as const, text: userMessage || '请看这张图片' },
                 { type: 'image_url' as const, image_url: { url: imageBase64 } },
             ];
 
+            // 得到对图片的纯文本描述
             const imageDescription = await this.deepseekService.identifyImageOnly(imageContent);
 
-            // 【阶段2】将图片描述作为文本消息，结合角色设定调用 DeepSeek
+            // 【阶段 2】角色化回复：将描述包装进用户消息，再发给扮演模型
             console.log('🎭 [阶段2] 开始角色扮演回复...');
             const enhancedMessage = `[图片内容描述：${imageDescription}]\n\n${userMessage || '这张图片怎么样？'}`;
 
             messages.push({
                 role: 'user',
-                content: enhancedMessage,  // 纯文本消息，包含图片描述
+                content: enhancedMessage,
             });
+            // 持久化存储用户消息（标记为图片类型）
             await this.saveMessage(roleId, conversation.id, enhancedMessage, MessageRole.USER, MessageType.IMAGE);
         } else {
+            // 普通文本消息直接加入
             messages.push({
                 role: 'user',
                 content: userMessage,
@@ -312,21 +324,23 @@ export class ChatService {
             await this.saveMessage(roleId, conversation.id, userMessage, MessageRole.USER);
         }
 
-        // 5. 调用 DeepSeek 流式 API（图片模式下也使用 DeepSeek）
+        // --- 6. 启动 AI 流式输出 ---
         let assistantResponse = '';
 
         await this.deepseekService.streamChat(
             messages,
             (chunk) => {
-                assistantResponse += chunk;
-                onChunk(chunk);
+                assistantResponse += chunk; // 累加完整的 AI 回复以便后续存库
+                onChunk(chunk);             // 实时传递给 Controller -> 前端
             },
             onError,
         );
 
-        // 6. 保存 AI 回复
+        // --- 7. 数据落库 ---
+        // 对话结束后，将 AI 生成的完整文本存入数据库
         await this.saveMessage(roleId, conversation.id, assistantResponse, MessageRole.ASSISTANT);
 
+        // 返回当前会话 ID，方便前端如果是新会话能更新 URL
         return { conversationId: conversation.id };
     }
 }
