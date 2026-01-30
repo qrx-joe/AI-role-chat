@@ -168,14 +168,25 @@
 </template>
 
 <script setup>
+/**
+ * 角色管理器组件
+ * 
+ * 核心功能：
+ * 1. 角色列表展示（支持网格/列表切换）
+ * 2. 角色创建与编辑（带头像预览与随机生成）
+ * 3. 拖拽排序（Grid 模式下按住卡片即可调整位置）
+ * 4. 用户本人头像设置
+ */
 import { ref, defineProps, computed, watch, onMounted } from 'vue';
 import { useChatStore } from '../stores/chat';
 
 const props = defineProps({
+  /** 紧凑模式：通常用于侧边栏 */
   compact: {
     type: Boolean,
     default: false
   },
+  /** 网格模式：用于首页大屏展示 */
   grid: {
     type: Boolean,
     default: false
@@ -183,10 +194,19 @@ const props = defineProps({
 });
 
 const chatStore = useChatStore();
+
+// --- 弹窗控制状态 ---
+/** 是否显示创建/编辑对话框 */
 const showDialog = ref(false);
+/** 是否显示头像大图预览 */
 const showAvatarZoom = ref(false);
+/** 是否处于编辑模式（否则为创建模式） */
 const isEditing = ref(false);
+/** 正在编辑的角色临时 ID */
 const editingRoleId = ref(null);
+
+// --- 表单数据 ---
+/** 创建/编辑角色的临时表单对象 */
 const roleForm = ref({
   name: '',
   personality: '',
@@ -196,25 +216,33 @@ const roleForm = ref({
   avatar: ''
 });
 
-// Ordering Logic
+// --- 拖拽排序逻辑 ---
+/** 本地维护的角色数组克隆，用于拖拽时的即时视觉反馈 */
 const localRoles = ref([]);
+/** 当前正在被拖拽的卡片索引 */
 const draggedIndex = ref(null);
 
-// Keep localRoles synced with store roles when not dragging
+/**
+ * 状态同步
+ * 
+ * 当后端返回新的角色数据时，且当前没有正在进行的拖拽操作，同步更新本地列表。
+ */
 watch(() => chatStore.roles, (newRoles) => {
   if (draggedIndex.value === null) {
     localRoles.value = [...newRoles];
   }
 }, { immediate: true, deep: true });
 
+/** 开始拖拽 */
 function handleDragStart(index) {
   draggedIndex.value = index;
 }
 
+/** 拖拽悬停：实现“位置实时交换”的视觉效果 */
 function handleDragEnter(index) {
   if (draggedIndex.value === null || draggedIndex.value === index) return;
   
-  // Swap items in local array for immediate visual feedback
+  // 在本地数组中交换位置
   const items = [...localRoles.value];
   const temp = items[draggedIndex.value];
   items.splice(draggedIndex.value, 1);
@@ -224,9 +252,9 @@ function handleDragEnter(index) {
   draggedIndex.value = index;
 }
 
+/** 拖拽结束：向后端持久化新的排序顺序 */
 async function handleDragEnd() {
   draggedIndex.value = null;
-  // Auto-save the new order to backend
   try {
     const orderData = localRoles.value.map((role, index) => ({
       id: role.id,
@@ -238,15 +266,16 @@ async function handleDragEnd() {
   }
 }
 
+/** 点击角色卡片进入对话 */
 function handleCardClick(role) {
-  // Click still works normally
   chatStore.selectRole(role);
 }
 
+/** 打开创建对话框 */
 function openCreateDialog() {
   isEditing.value = false;
   editingRoleId.value = null;
-  // Initialize with a random avatar immediately for better UX
+  // 随机生成一个初始头像种子，提升用户输入体验
   const seed = Math.random().toString(36).substring(7);
   roleForm.value = { 
      name: '', 
@@ -254,11 +283,12 @@ function openCreateDialog() {
      background: '', 
      constraints: '', 
      examples: '', 
-     avatar: generateDiceBearUrl(seed) // Auto-gen one to start
+     avatar: generateDiceBearUrl(seed) 
   };
   showDialog.value = true;
 }
 
+/** 打开编辑对话框 */
 function openEditDialog(role) {
   isEditing.value = true;
   editingRoleId.value = role.id;
@@ -266,11 +296,13 @@ function openEditDialog(role) {
   showDialog.value = true;
 }
 
+/** 关闭弹窗 */
 function closeDialog() {
   showDialog.value = false;
   showAvatarZoom.value = false;
 }
 
+/** 提交角色数据（创建或修改） */
 async function handleSubmit() {
   if (!roleForm.value.name || !roleForm.value.personality || !roleForm.value.background) {
     alert('请填写必填字段：名称、性格、背景');
@@ -289,42 +321,45 @@ async function handleSubmit() {
   }
 }
 
+/** 删除角色 */
 async function handleDelete(roleId) {
-  if (confirm('确定删除这个角色吗？')) {
+  if (confirm('确定删除这个角色吗？相关的对话记录也会被清理。')) {
     await chatStore.deleteRole(roleId);
   }
 }
-// Helper to get avatar URL (Default: Notionists with Morandi BG)
+
+/** 获取头像地址的逻辑：支持自定义或自动 fallback 到 DiceBear */
 function getAvatarUrl(role) {
-  // If role has a specific avatar set (custom URL or saved DiceBear URL), use it.
   if (role.avatar) return role.avatar;
-  
-  // Default fallback: Generate deterministic Notion-style avatar based on name
   return generateDiceBearUrl(role.name);
 }
 
+/**
+ * DiceBear 头像生成逻辑
+ * 
+ * 选用 'notionists' 风格，这是一种极简且富有表现力的类似 Notion 的人像风格。
+ */
 function generateDiceBearUrl(seed) {
-  const style = 'notionists'; // Human-like, expressive, fits 'Persona'
-  
-  // Bright Pastel Palette (Fresher, Lighter Tones)
+  const style = 'notionists';
   const colors = [
-    'FFD6E0', // Light Sakura Pink
-    'C1E7E3', // Fresh Mint Green
-    'D1E8FF', // Bright Sky Blue
-    'FFF2CC', // Light Lemon
-    'E2D4F5', // Soft Lavender
-    'FFE6D1'  // Pale Apricot
+    'FFD6E0', // 樱花粉
+    'C1E7E3', // 薄荷绿
+    'D1E8FF', // 天空蓝
+    'FFF2CC', // 柠檬黄
+    'E2D4F5', // 薰衣草紫
+    'FFE6D1'  // 蜜桃橘
   ].join(',');
 
   return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(seed)}&backgroundColor=${colors}`;
 }
 
-// Generate a random avatar URL for the form
+/** 随机换个新头像（在表单内使用） */
 function generateRandomAvatar() {
   const randomSeed = Math.random().toString(36).substring(7);
   roleForm.value.avatar = generateDiceBearUrl(randomSeed);
 }
 
+// --- 用户头像管理流 ---
 const showUserAvatarDialog = ref(false);
 const userAvatarForm = ref('');
 
@@ -343,6 +378,7 @@ function saveUserAvatar() {
   showUserAvatarDialog.value = false;
 }
 
+/** 获取名称首字母（兜底用） */
 function getInitials(name) {
   return name ? name.charAt(0).toUpperCase() : '?';
 }

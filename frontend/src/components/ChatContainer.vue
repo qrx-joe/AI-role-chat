@@ -81,6 +81,15 @@
 </template>
 
 <script setup>
+/**
+ * 聊天主容器组件
+ * 
+ * 核心功能：
+ * 1. 渲染聊天消息流（支持图文显示）
+ * 2. 处理用户输入发送（文本 + 图片）
+ * 3. 自动滚动到底部
+ * 4. 集成调试面板与系统提示词预览
+ */
 import { ref, nextTick, watch } from 'vue';
 import { useChatStore } from '../stores/chat';
 import ImageUploader from './ImageUploader.vue';
@@ -88,21 +97,39 @@ import PromptPreview from './PromptPreview.vue';
 import DebugPanel from './DebugPanel.vue';
 
 const chatStore = useChatStore();
+
+/** 用户当前输入的文本 */
 const inputText = ref('');
+
+/** 待上传图片的 Base64 数据 */
 const uploadedImage = ref(null);
+
+/** 消息列表容器的 DOM 引用，用于控制滚动 */
 const messagesContainer = ref(null);
+
+/** 控制调试面板的显隐 */
 const showDebug = ref(false);
 
+/**
+ * 获取角色的头像 URL
+ * 
+ * 如果角色没有自定义头像，则使用 DiceBear 生成一个基于名称的随机头像。
+ */
 function getRoleAvatar(role) {
   if (!role) return '';
   if (role.avatar) return role.avatar;
-  // Use same fallback logic as RoleManager
+  
+  // 备用逻辑：Notion 风格人像，配合随机调色盘
   const style = 'notionists';
   const colors = 'FFD6E0,C1E7E3,D1E8FF,FFF2CC,E2D4F5,FFE6D1';
   return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(role.name)}&backgroundColor=${colors}`;
 }
 
-// 自动滚动到底部
+/**
+ * 自动滚动逻辑
+ * 
+ * 每当消息数组长度变化（有新消息进入）时，等待 DOM 更新完成，并平滑滚动到容器最底部。
+ */
 watch(() => chatStore.messages.length, async () => {
   await nextTick();
   if (messagesContainer.value) {
@@ -110,21 +137,36 @@ watch(() => chatStore.messages.length, async () => {
   }
 }, { deep: true });
 
+/**
+ * 处理消息发送
+ * 
+ * 逻辑：
+ * 1. 检查输入有效性（不能为空且不在生成中）
+ * 2. 构造数据并调用 Store 的 sendMessage 动作
+ * 3. 清空本地输入框和已上传图片
+ */
 async function handleSend() {
   if ((!inputText.value.trim() && !uploadedImage.value) || chatStore.isStreaming) return;
 
   const text = inputText.value.trim() || '请看这张图片';
   const image = uploadedImage.value;
   
+  // 立即清空，提升 UI 响应感
   inputText.value = '';
   uploadedImage.value = null;
 
   await chatStore.sendMessage(text, image);
 }
 
+/**
+ * 文本内容清洗
+ * 
+ * 用于在聊天气泡中隐藏后端两阶段处理时添加的预览描述 [图片内容描述：...]。
+ * 这样做可以保持界面的简洁，仅展示用户实际发送的指令。
+ */
 function cleanText(text) {
   if (!text) return '';
-  // Remove [图片内容描述：...] block which includes newlines
+  // 移除 [图片内容描述：...] 块及其后的空白字符
   return text.replace(/\[图片内容描述：[\s\S]*?\]\s*/g, '').trim();
 }
 </script>
