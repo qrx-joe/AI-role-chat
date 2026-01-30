@@ -9,8 +9,12 @@
     <!-- Header: Hidden in Grid Mode (handled by App.vue), Visible in Normal/Compact -->
     <div class="header" v-if="!grid">
       <h2 v-if="!compact">AI 角色</h2>
-      <button v-if="compact" class="btn-back" @click="chatStore.selectRole(null)">
-        ← 返回角色列表
+      <button v-if="compact" class="btn-back" @click="chatStore.selectRole(null)" title="返回角色列表">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>返回角色列表</span>
       </button>
       <button v-else class="btn-create" @click="openCreateDialog">+ 唤醒新角色</button>
     </div>
@@ -411,22 +415,35 @@ function getInitials(name) {
 }
 
 .btn-back {
-  background: transparent;
-  border: none;
+  background: white;
+  border: 1px solid var(--border-subtle);
   font-family: var(--font-heading);
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-main);
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0;
+  gap: 8px;
+  padding: 8px 16px;
   font-size: 0.9rem;
-  transition: color 0.2s;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
 }
 
 .btn-back:hover {
   color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+}
+
+.btn-back svg {
+  transition: transform 0.3s;
+}
+
+.btn-back:hover svg {
+  transform: translateX(-4px);
 }
 
 .active-role-display {
