@@ -40,12 +40,82 @@
        <div class="divider"></div>
        
        <!-- 展开侧边栏 (移动到这里与新对话成组) -->
-       <button class="btn-toggle" @click="$emit('toggle')" title="展开侧边栏">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="9" y1="3" x2="9" y2="21"></line>
-          </svg>
-       </button>
+       <!-- 展开侧边栏 (移动到这里与新对话成组) -->
+       <div 
+         class="expand-hover-area"
+         @mouseenter="showHoverPreview = true"
+         @mouseleave="showHoverPreview = false"
+       >
+         <button class="btn-toggle" @click="$emit('toggle')" title="展开侧边栏">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+         </button>
+
+         <!-- 历史记录悬浮窗 (完全复刻展开时的样式) -->
+         <div v-if="showHoverPreview && collapsed" class="history-popover full-style">
+            <div class="popover-content"> <!-- Inner wrapper for styling isolation -->
+                <div class="popover-header">
+                  <h3>历史对话</h3>
+                </div>
+                
+                <div class="conversation-list-preview">
+                  <div 
+                    v-for="group in groupedConversations" 
+                    :key="group.roleId"
+                    class="role-group"
+                  >
+                    <!-- 分组头部 -->
+                    <div class="role-header">
+                      <img 
+                        :src="group.roleAvatar || getInitialsAvatar(group.roleName)" 
+                        class="sidebar-role-avatar" 
+                        alt="Role Avatar"
+                      />
+                      <span class="role-name">{{ group.roleName }}</span>
+                      <span class="count">({{ group.conversations.length }})</span>
+                      
+                      <div class="role-actions">
+                        <button class="btn-group-action" @click="handleNewChat(group.roleId); $emit('toggle');" title="与此角色开始新对话">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- 会话列表 -->
+                    <div class="group-conversations">
+                      <div 
+                        v-for="conv in group.conversations" 
+                        :key="conv.id"
+                        class="conversation-item"
+                        :class="{ active: chatStore.currentConversationId === conv.id }"
+                      >
+                        <div 
+                          class="conv-content"
+                          @click="chatStore.selectConversation(conv); $emit('toggle');"
+                        >
+                          <div class="conv-title">{{ conv.title || '未命名对话' }}</div>
+                          <div class="conv-time">{{ formatTime(conv.updatedAt) }}</div>
+                        </div>
+                        <!-- 复刻删除按钮 -->
+                        <button 
+                          class="btn-delete" 
+                          @click.stop="handleDelete(conv)"
+                          title="删除对话"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2 2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+         </div>
+       </div>
 
        <!-- 开启新对话 -->
        <button class="btn-new-chat-compact" @click="startNewChatCurrentRole" title="开启新对话">
@@ -116,7 +186,7 @@
 </template>
 
 <script setup>
-import { onMounted, computed, defineProps, defineEmits } from 'vue';
+import { onMounted, computed, defineProps, defineEmits, ref } from 'vue';
 import { useChatStore } from '../stores/chat';
 
 const props = defineProps({
@@ -127,6 +197,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['toggle']);
+
+const showHoverPreview = ref(false);
 
 /**
  * 历史侧边栏管理组件
@@ -317,9 +389,6 @@ function startNewChatCurrentRole() {
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
 }
 
-.history-sidebar.is-collapsed .btn-toggle {
-   /* Style is unified now */
-}
 
 .btn-toggle svg, .btn-back-compact svg {
   transition: transform 0.3s;
@@ -371,7 +440,57 @@ function startNewChatCurrentRole() {
   gap: 16px;
   border-top: 1px solid var(--border-subtle);
   width: 100%;
+  width: 100%;
   margin-top: 12px;
+}
+
+.expand-hover-area {
+  position: relative; /* Anchor for popover */
+  z-index: 10; /* Ensure popover stays on top of subsequent siblings */
+}
+
+.history-popover.full-style {
+  position: absolute;
+  left: 100%;
+  top: -12px;
+  width: 334px; /* 320px content + 14px padding */
+  padding-left: 14px; /* Invisible bridge */
+  z-index: 100;
+}
+
+.popover-content {
+  background: white;
+  width: 100%;
+  max-height: calc(100vh - 120px);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 0 1px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+
+.history-popover .popover-header {
+  padding: 16px 20px 8px;
+  background: white;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.conversation-list-preview {
+  padding: 12px 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  background: white;
+}
+
+/* Scrollbar refinement for popover */
+.conversation-list-preview::-webkit-scrollbar {
+  width: 4px;
+}
+.conversation-list-preview::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 2px;
 }
 
 .btn-new-chat-compact {

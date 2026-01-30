@@ -146,6 +146,7 @@ onMounted(() => {
 .sidebar.is-collapsed {
   width: 72px;
   flex: 0 0 72px;
+  overflow: visible; /* Allow popovers to extend outside */
 }
 
 .role-header-wrapper {
@@ -158,6 +159,10 @@ onMounted(() => {
 .sidebar > *:last-child {
   flex: 1;
   overflow-y: auto;
+}
+
+.sidebar.is-collapsed > *:last-child {
+  overflow: visible; /* Prevents clipping of the history popover */
 }
 
 .main-content {
