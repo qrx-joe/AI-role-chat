@@ -1,9 +1,11 @@
 <template>
   <div class="history-sidebar">
+    <!-- 侧边栏头部：标题与刷新动作 -->
     <div class="header">
       <h3>历史对话</h3>
       <div class="header-actions">
         <button class="btn-refresh" @click="chatStore.loadConversations" title="刷新列表">
+          <!-- 顺时针旋转图标 -->
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 2v6h-6"></path>
             <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
@@ -15,12 +17,13 @@
     </div>
     
     <div class="conversation-list">
-      <!-- 按角色分组 -->
+      <!-- 渲染分组后的对话：同一角色的对话聚拢在一起 -->
       <div 
         v-for="group in groupedConversations" 
         :key="group.roleId"
         class="role-group"
       >
+        <!-- 分组头部：展示角色的头像和名称 -->
         <div class="role-header">
           <img 
             :src="group.roleAvatar || getInitialsAvatar(group.roleName)" 
@@ -31,13 +34,14 @@
           <span class="count">({{ group.conversations.length }})</span>
           
           <div class="role-actions">
-            <!-- 加上新对话按钮 -->
+            <!-- 直接在这个分组下开启新对话 -->
             <button class="btn-group-action" @click="handleNewChat(group.roleId)" title="与此角色开始新对话">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             </button>
           </div>
         </div>
         
+        <!-- 属于该角色的具体会话项 -->
         <div class="group-conversations">
           <div 
             v-for="conv in group.conversations" 
@@ -45,6 +49,7 @@
             class="conversation-item"
             :class="{ active: chatStore.currentConversationId === conv.id }"
           >
+            <!-- 点击切换会话逻辑 -->
             <div 
               class="conv-content"
               @click="chatStore.selectConversation(conv)"
@@ -52,6 +57,7 @@
               <div class="conv-title">{{ conv.title || '未命名对话' }}</div>
               <div class="conv-time">{{ formatTime(conv.updatedAt) }}</div>
             </div>
+            <!-- 删除单个会话按钮（仅在悬停时显示） -->
             <button 
               class="btn-delete" 
               @click.stop="handleDelete(conv)"
@@ -73,22 +79,35 @@
 import { onMounted, computed } from 'vue';
 import { useChatStore } from '../stores/chat';
 
+/**
+ * 历史侧边栏管理组件
+ * 
+ * 核心功能：
+ * 1. 自动对历史会话进行【角色分组】，方便用户查阅。
+ * 2. 提供快捷的切换会话、删除会话以及开启特定角色新对话的功能。
+ * 3. 实时展示最后活跃时间。
+ */
 const chatStore = useChatStore();
 
-// 按角色分组对话
+/**
+ * 分组逻辑 (Computed)
+ * 将扁平的会话列表转换成按角色分类的树状结构
+ */
 const groupedConversations = computed(() => {
   const groups = {};
   const currentRoleId = chatStore.currentRole?.id;
   
   chatStore.conversations.forEach(conv => {
-    // 过滤：如果已选中角色，只显示该角色的对话
+    // 过滤：如果已选中角色，通常侧边栏只展示该相关的对话（或者展示全部但突出重点）
+    // 当前逻辑：如果有选中角色，仅展示该角色的对话。
     if (currentRoleId && conv.role?.id !== currentRoleId) {
       return;
     }
 
     const roleId = conv.role?.id || 'unknown';
     const roleName = conv.role?.name || '未知角色';
-    // Helper logic to get same consistent avatar
+    
+    // 复用 DiceBear 动态生成规则，确保侧边栏头像与主界面一致
     let roleAvatar = conv.role?.avatar;
     if (!roleAvatar && conv.role?.name) {
        const style = 'notionists';
@@ -96,6 +115,7 @@ const groupedConversations = computed(() => {
        roleAvatar = `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(conv.role.name)}&backgroundColor=${colors}`;
     }
     
+    // 初始化分组容器
     if (!groups[roleId]) {
       groups[roleId] = {
         roleId,
@@ -108,7 +128,7 @@ const groupedConversations = computed(() => {
     groups[roleId].conversations.push(conv);
   });
   
-  // 对每个组内的对话按更新时间降序排列
+  // 组内排序：最新的对话排在最前面
   Object.values(groups).forEach(group => {
     group.conversations.sort((a, b) => 
       new Date(b.updatedAt) - new Date(a.updatedAt)
@@ -118,22 +138,31 @@ const groupedConversations = computed(() => {
   return Object.values(groups);
 });
 
+// 组件挂载即加载历史记录
 onMounted(() => {
   chatStore.loadConversations();
 });
 
+/**
+ * 备选头像生成
+ */
 function getInitialsAvatar(name) {
-  // Fallback just in case
   const style = 'notionists';
   const colors = 'FFD6E0,C1E7E3,D1E8FF,FFF2CC,E2D4F5,FFE6D1';
   return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(name || 'User')}&backgroundColor=${colors}`;
 }
 
+/**
+ * 时间本地化格式化 (HH:mm)
+ */
 function formatTime(dateStr) {
   const date = new Date(dateStr);
   return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+/**
+ * 删除会话逻辑 (含确认弹窗)
+ */
 async function handleDelete(conversation) {
   const roleName = conversation.role?.name || '未知角色';
   const confirmed = confirm(`确定要删除与"${roleName}"的这段对话吗？\n此操作不可恢复！`);
@@ -147,17 +176,20 @@ async function handleDelete(conversation) {
   }
 }
 
+/**
+ * 开启新对话
+ * 点击角色分组旁的 [+] 按钮执行
+ */
 async function handleNewChat(roleId) {
-  // Find role from store
   const role = chatStore.roles.find(r => r.id === roleId);
   if (role) {
+     // 保护逻辑：如果当前正在临时会话中且有未保存的消息，提示用户
      const shouldConfirm = chatStore.messages.length > 0 && chatStore.currentConversationId === null;
      if (shouldConfirm) {
         if (!confirm('当前有未保存的对话，确定要开始新对话吗？')) return;
      }
      
      chatStore.startNewChat(role);
-     // If sidebar is overlay on mobile (future proof), close it here
   }
 }
 </script>

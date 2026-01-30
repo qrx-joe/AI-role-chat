@@ -6,6 +6,7 @@
     </div>
     
     <div class="debug-content">
+      <!-- 区域 A：请求原始载荷 -->
       <div class="debug-section">
         <h4 @click="showRequest = !showRequest">
           📡 最近请求数据 (JSON)
@@ -14,6 +15,7 @@
         <pre v-if="showRequest" class="json-block">{{ chatStore.lastRequestData }}</pre>
       </div>
 
+      <!-- 区域 B：SSE 流式原始分片 -->
       <div class="debug-section">
         <h4 @click="showResponse = !showResponse">
           📥 最近响应 Chunks (SSE)
@@ -26,6 +28,7 @@
         </div>
       </div>
 
+      <!-- 区域 C：Pinia 内部状态 -->
       <div class="debug-section">
         <h4 @click="showState = !showState">
           ⚙️ 当前状态 (Store)
@@ -47,9 +50,17 @@
 import { ref } from 'vue';
 import { useChatStore } from '../stores/chat';
 
+/**
+ * 后台调试面板组件
+ * 
+ * 作用：
+ * 实时监控前端与后端 API 的通讯细节。
+ * 能够看到每次发送的 DTO 载荷、流式返回的每一个 Chunk，以及 Store 的关键状态。
+ */
 defineEmits(['close']);
 const chatStore = useChatStore();
 
+// 折叠状态控制
 const showRequest = ref(true);
 const showResponse = ref(false);
 const showState = ref(false);

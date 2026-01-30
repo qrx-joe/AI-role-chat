@@ -1,4 +1,5 @@
 <template>
+  <!-- 遮罩层，点击背景可关闭 -->
   <div class="prompt-preview-overlay" @click="chatStore.togglePromptPreview">
     <div class="prompt-preview-modal" @click.stop>
       <div class="modal-header">
@@ -7,8 +8,9 @@
       </div>
       <div class="modal-body">
         <div class="info-alert">
-          💡 这是发送给大模型的隐藏指令，定义了角色的灵魂。
+          💡 这是发送给大模型的隐藏指令，定义了角色的“灵魂”与行为约束。
         </div>
+        <!-- 实时渲染的 Prompt 输出 -->
         <pre class="prompt-content">{{ generatedPrompt }}</pre>
       </div>
     </div>
@@ -19,11 +21,22 @@
 import { computed } from 'vue';
 import { useChatStore } from '../stores/chat';
 
+/**
+ * 系统提示词预览组件
+ * 
+ * 作用：
+ * 开发者或用户可以在这里检查当前选中的角色最终生成的 System Prompt 字符串。
+ * 这有助于调试 AI 的人设输出是否符合预期。
+ */
 const chatStore = useChatStore();
 
+/**
+ * 实时计算生成的 Prompt
+ * 逻辑与后端 ChatService.buildSystemPrompt 保持一致。
+ */
 const generatedPrompt = computed(() => {
   const role = chatStore.currentRole;
-  if (!role) return '';
+  if (!role) return '未选中角色';
   
   let p = `你是 ${role.name}。\n\n`;
   p += `【性格特征】\n${role.personality}\n\n`;

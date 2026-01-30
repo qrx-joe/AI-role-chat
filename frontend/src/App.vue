@@ -1,25 +1,35 @@
 <template>
   <div class="app-container">
-    <!-- 模式 A：无角色选中（首页模式），全屏网格显示 -->
+    <!-- 
+      模式 A：无角色选中（首页模式）。
+      初始进入应用或点击 Logo 时，全屏展示角色网格供用户挑选。
+    -->
     <main v-if="!chatStore.currentRole" class="home-layout">
        <div class="home-header">
           <h1>选择你的 AI 伙伴</h1>
           <p>开启一段新的对话旅程</p>
        </div>
        <div class="home-content">
+          <!-- 传入 grid 属性，让 RoleManager 渲染为精美的大网格布局 -->
           <RoleManager :grid="true" />
        </div>
     </main>
 
-    <!-- 模式 B：有角色选中（对话模式），恢复侧边栏布局 -->
+    <!-- 
+      模式 B：有角色选中（对话模式）。
+      进入特定的角色对话界面，展示左侧历史侧边栏和右侧聊天主体。
+    -->
     <template v-else>
       <aside class="sidebar">
         <div class="role-header-wrapper">
+          <!-- 在侧边栏中使用 compact 模式展示当前正在对话的角色 -->
           <RoleManager :compact="true" />
         </div>
+        <!-- 侧边栏历史记录列表 -->
         <HistorySidebar />
       </aside>
       <main class="main-content">
+        <!-- 对话框主体：消息列表与输入框 -->
         <ChatContainer />
       </main>
     </template>
@@ -33,8 +43,16 @@ import ChatContainer from './components/ChatContainer.vue';
 import HistorySidebar from './components/HistorySidebar.vue';
 import { useChatStore } from './stores/chat';
 
+/**
+ * 根组件脚本
+ * 
+ * 核心逻辑：
+ * 1. 控制“首页网格”与“对话界面”的切换。
+ * 2. 在组件挂载时初始化全局角色列表。
+ */
 const chatStore = useChatStore();
 
+// 应用初始化：加载所有后端存储的角色信息
 onMounted(() => {
   chatStore.loadRoles();
 });
