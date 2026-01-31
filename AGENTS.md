@@ -74,26 +74,6 @@ npm run preview            # Preview production build
 # Windows
 start.bat                  # Launch both frontend and backend
 stop.bat                   # Stop all services
-
-# Manual
-.
-├── backend/              # NestJS + TypeORM + SQLite
-│   ├── src/
-│   │   ├── chat/         # DeepSeek API integration, SSE streaming
-│   │   ├── roles/        # Role CRUD operations
-│   │   ├── conversations/# Session management
-│   │   ├── messages/     # Message storage
-│   │   ├── upload/       # File upload handling
-│   │   └── common/       # Exception filters, utilities
-│   └── test/             # E2E tests
-├── frontend/             # Vue3 + Pinia + Vite
-│   ├── src/
-│   │   ├── components/   # Vue SFC components
-│   │   ├── stores/       # Pinia state management
-│   │   ├── api/          # API client functions
-│   │   └── assets/       # Static resources
-│   └── index.html
-└── start.bat / start.ps1 # One-click start scripts
 ```
 
 ## Code Style Guidelines
