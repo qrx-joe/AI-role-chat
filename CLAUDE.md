@@ -55,13 +55,18 @@ npm run build
 # 格式化代码
 npm run format
 
-#  lint 检查
+# Lint 检查
 npm run lint
 
 # 运行测试
-npm run test
-npm run test:watch
-npm run test:cov
+npm run test              # 运行所有测试
+npm run test:watch        # 监听模式运行测试
+npm run test:cov          # 生成测试覆盖率报告
+npm run test:debug        # 调试模式运行测试
+npm run test:e2e          # 运行端到端测试
+
+# 单文件测试
+npx jest src/chat/chat.service.spec.ts --watch
 ```
 
 ### 前端开发
@@ -117,7 +122,7 @@ DATABASE_PATH=./database.sqlite           # 可选：SQLite 数据库路径
    - `MessagesModule`：消息存储
    - `UploadModule`：文件上传处理
 
-2. **数据库**：SQLite（开发环境），使用 TypeORM  ORM
+2. **数据库**：SQLite（开发环境），使用 TypeORM ORM
 3. **数据流**：
    - 前端请求 → Controller → Service → DeepSeek API
    - 流式响应通过 SSE 实时返回前端
@@ -145,6 +150,7 @@ DATABASE_PATH=./database.sqlite           # 可选：SQLite 数据库路径
 - `GET /api/roles/:id` - 获取角色详情
 - `PUT /api/roles/:id` - 更新角色
 - `DELETE /api/roles/:id` - 删除角色
+- `PATCH /api/roles/order` - 更新角色排序
 
 ### 对话接口
 
@@ -158,6 +164,7 @@ DATABASE_PATH=./database.sqlite           # 可选：SQLite 数据库路径
 
 - `GET /api/conversations` - 获取会话列表
 - `GET /api/conversations/:id/messages` - 获取会话消息
+- `DELETE /api/conversations/:id` - 删除会话
 
 ## 🎯 核心功能
 
@@ -189,13 +196,50 @@ DATABASE_PATH=./database.sqlite           # 可选：SQLite 数据库路径
 
 ### 后端
 
-- `backend/src/chat/chat.service.ts` - 聊天业务逻辑
-- `backend/src/chat/deepseek.service.ts` - DeepSeek API 集成
-- `backend/src/roles/roles.service.ts` - 角色管理
-- `backend/src/app.module.ts` - 应用模块配置
+- `backend/src/chat/chat.service.ts` - 聊天业务逻辑（核心编排层）
+- `backend/src/chat/deepseek.service.ts` - DeepSeek API 集成（AI 接口层）
+- `backend/src/roles/roles.service.ts` - 角色管理（CRUD 操作）
+- `backend/src/app.module.ts` - 应用模块配置（根模块）
 
 ### 前端
 
-- `frontend/src/stores/` - 状态管理
-- `frontend/src/api/` - API 接口
-- `frontend/src/components/` - Vue 组件
+- `frontend/src/stores/chat.js` - 聊天核心状态管理（Pinia Store）
+- `frontend/src/api/index.js` - API 接口定义（统一请求拦截器）
+- `frontend/src/components/` - Vue 组件（UI 渲染层）
+
+## 🏛️ 架构亮点
+
+### 后端设计模式
+
+1. **分层架构**：Controller → Service → Repository
+2. **两阶段图片处理**：视觉识别 → 角色化回复
+3. **智能标题生成**：AI 自动生成对话主题
+4. **流式响应优化**：SSE 实时推送 + 打字机效果
+
+### 前端设计模式
+
+1. **状态管理**：Pinia 单一 Store 管理所有状态
+2. **组件通信**：Props/Events + Store 共享状态
+3. **流式解析**：ReadableStream 逐块处理 SSE 数据
+4. **图片压缩**：Canvas 前端压缩优化传输
+
+## 🚀 开发工作流程
+
+### 新增功能
+
+1. 后端：创建/修改 Module → Service → Controller
+2. 前端：创建/修改 Component → Store Action → API 调用
+3. 数据库：更新 Entity → 重启服务自动同步
+4. 测试：为新功能编写单元测试
+
+### 调试技巧
+
+1. 后端：使用 `npm run start:debug` 启动调试模式
+2. 前端：使用浏览器 DevTools 的 Network 面板查看 SSE 数据流
+3. 数据库：SQLite 数据库文件位于 `backend/database.sqlite`
+
+### 常见问题
+
+- **端口占用**：确保 3000（后端）和 5173（前端）端口未被占用
+- **API Key 无效**：检查 `backend/.env` 文件中的 API Key 配置
+- **数据库同步失败**：删除 `backend/database.sqlite` 后重启服务
