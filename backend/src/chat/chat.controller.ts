@@ -9,7 +9,7 @@ import { SendMessageDto } from './dto/chat.dto';
  * 负责处理用户与 AI 之间的实时对话请求。
  * 主要特点是支持流式响应 (SSE)，让前端能实时展示生成内容。
  */
-@Controller('api/chat')
+@Controller('chat')
 export class ChatController {
     constructor(private readonly chatService: ChatService) { }
 

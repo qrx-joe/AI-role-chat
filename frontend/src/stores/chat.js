@@ -8,7 +8,7 @@ import { roleApi, conversationApi } from '../api';
  * 负责维护整个应用的前端状态，协调 API 调用与 UI 渲染。
  */
 export const useChatStore = defineStore('chat', () => {
-    const baseURL = 'http://localhost:3000/api';
+    const baseURL = '/api';
 
     // ==================== 核心状态 (State) ====================
 

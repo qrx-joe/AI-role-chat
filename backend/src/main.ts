@@ -13,6 +13,10 @@ import { join } from 'path';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // --- 0. 全局路由前缀 ---
+  // 统一将所有业务接口挂载到 /api，避免在 Controller 中重复拼写前缀
+  app.setGlobalPrefix('api');
+
   // --- 1. 跨域与安全配置 ---
   app.enableCors();
 

@@ -6,7 +6,7 @@ import { ConversationsService } from './conversations.service';
  * 
  * 负责管理会话记录及其关联的消息。
  */
-@Controller('api/conversations')
+@Controller('conversations')
 export class ConversationsController {
     constructor(private readonly conversationsService: ConversationsService) { }
 

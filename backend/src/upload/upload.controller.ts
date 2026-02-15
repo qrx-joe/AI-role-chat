@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
  * 负责处理用户上传的图片文件（如自定义头像或聊天中的图片）。
  * 使用 Multer 进行磁盘存储管理。
  */
-@Controller('api/upload')
+@Controller('upload')
 export class UploadController {
     /**
      * 上传单张图片

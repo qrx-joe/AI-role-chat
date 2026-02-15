@@ -5,10 +5,10 @@ import { CreateRoleDto, UpdateRoleDto } from './dto/role.dto';
 /**
  * 角色管理控制器
  * 
- * 暴露 /api/roles 路由，处理前端对 AI 角色配置的各种请求。
+ * 暴露 /roles 路由（实际访问前缀由全局 /api 统一挂载）。
  * 遵循 RESTful 设计规范。
  */
-@Controller('api/roles')
+@Controller('roles')
 export class RolesController {
     constructor(private readonly rolesService: RolesService) { }
 
