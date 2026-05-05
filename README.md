@@ -24,7 +24,8 @@
 | Axios | 1.13.2 | DeepSeek API 调用 |
 
 ### AI 能力
-- **DeepSeek V3 / 多模态 Vision API**：文本对话 + 图片语义理解
+- **DeepSeek V3** (`deepseek-chat`)：文本对话与角色扮演
+- **Zhipu GLM-4V** (`glm-4v-flash`)：图片语义识别（两阶段处理架构）
 - **SSE 流式传输**：逐字打字机效果，降低首字等待时间
 
 ---
@@ -60,10 +61,7 @@
 |---------|-----------|---------|
 | ![角色面板](docs/screenshots/role-panel.png) | ![多模态对话](docs/screenshots/chat-multimodal.png) | ![流式响应](docs/screenshots/streaming.png) |
 
-> 将截图放入 `docs/screenshots/` 目录即可自动渲染。推荐截取：
-> - `role-panel.png` — 角色选择面板 + 极光毛玻璃 UI
-> - `chat-multimodal.png` — 用户发送图片后 AI 角色化解读
-> - `streaming.png` — 流式响应逐字呈现效果
+> 截图由 `scripts/screenshot.js` 自动生成，也可手动替换。
 
 ---
 
@@ -115,13 +113,17 @@ AI role chat/
 │   │   ├── conversations/  # 会话管理
 │   │   ├── messages/       # 消息持久化
 │   │   └── upload/         # 图片上传处理
-│   └── .env                # DeepSeek API Key
+│   └── .env                # API Key 配置
 ├── frontend/                # Vue3 前端
 │   ├── src/
 │   │   ├── components/     # Vue 组件
 │   │   ├── stores/         # Pinia 状态管理
 │   │   └── api/            # API 接口封装
 │   └── package.json
+├── docs/
+│   └── screenshots/        # 功能截图
+├── scripts/
+│   └── screenshot.js       # 自动化截图脚本
 └── start.bat / start.ps1   # 一键启动脚本
 ```
 
@@ -156,4 +158,5 @@ AI role chat/
 
 - [使用指南](USAGE.md) - 功能演示与问题排查
 - [优化记录](OPTIMIZATION.md) - 性能与体验优化历程
-- [故障排查](TROUBLESHOOTING.md) - 常见问题解决方案
+- [故障排查](TROUBLESHOOTING.md) - 前端常见问题解决方案
+- [API 错误排查](DEBUG_400_ERROR.md) - DeepSeek / Zhipu API 400/500 错误诊断
