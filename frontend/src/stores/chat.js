@@ -8,7 +8,7 @@ import { roleApi, conversationApi } from '../api';
  * 负责维护整个应用的前端状态，协调 API 调用与 UI 渲染。
  */
 export const useChatStore = defineStore('chat', () => {
-    const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+    const baseURL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/^﻿/, '');
 
     // ==================== 核心状态 (State) ====================
 
