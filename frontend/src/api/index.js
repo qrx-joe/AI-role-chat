@@ -5,7 +5,7 @@ import axios from 'axios';
  * 
  * 统一管理所有与后端 NestJS 交互的强类型接口。
  */
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const api = axios.create({
     baseURL: API_BASE_URL,

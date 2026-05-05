@@ -1,0 +1,24 @@
+# Render Blueprint - 后端一键部署配置
+# 推送到 GitHub 后，在 Render Dashboard 选择 "Blueprint" 导入此仓库即可自动创建服务
+services:
+  - type: web
+    name: ai-role-chat-backend
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_PATH
+        value: ./database.sqlite
+      # 以下变量需要在 Render Dashboard 手动添加（不要写在这里）：
+      # - DEEPSEEK_API_KEY
+      # - DEEPSEEK_BASE_URL
+      # - ZHIPU_API_KEY (可选)
+      # - ZHIPU_BASE_URL (可选)
+      # - MOCK_MODE (可选，设为 true 可在无 API Key 时演示)
