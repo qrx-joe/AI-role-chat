@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -10,6 +10,7 @@ import { UploadModule } from './upload/upload.module';
 import { Role } from './roles/role.entity';
 import { Conversation } from './conversations/conversation.entity';
 import { Message } from './messages/message.entity';
+import { RateLimitMiddleware } from './common/middleware/rate-limit.middleware';
 
 /**
  * 根模块 (Root Module)
@@ -40,4 +41,8 @@ import { Message } from './messages/message.entity';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RateLimitMiddleware).forRoutes('*');
+  }
+}

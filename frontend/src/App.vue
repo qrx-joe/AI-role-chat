@@ -1,10 +1,25 @@
 <template>
   <div class="app-container">
-    <!-- 
+    <!-- 访问密码验证层 -->
+    <div v-if="!isAuthenticated" class="password-gate">
+      <div class="password-box">
+        <h2>🔒 请输入访问密码</h2>
+        <input
+          v-model="passwordInput"
+          type="password"
+          placeholder="密码"
+          @keyup.enter="checkPassword"
+        />
+        <button @click="checkPassword">进入</button>
+        <p v-if="passwordError" class="error">密码错误</p>
+      </div>
+    </div>
+
+    <!--
       模式 A：无角色选中（首页模式）。
       初始进入应用或点击 Logo 时，全屏展示角色网格供用户挑选。
     -->
-    <main v-if="!chatStore.currentRole" class="home-layout">
+    <main v-if="!chatStore.currentRole && isAuthenticated" class="home-layout">
        <div class="home-header">
           <h1>跃然 AI</h1>
           <p>邂逅你的数字伙伴，开启一段新的灵魂旅程……</p>
@@ -15,11 +30,11 @@
        </div>
     </main>
 
-    <!-- 
+    <!--
       模式 B：有角色选中（对话模式）。
       进入特定的角色对话界面，展示左侧历史侧边栏和右侧聊天主体。
     -->
-    <template v-else>
+    <template v-else-if="isAuthenticated">
       <aside class="sidebar" :class="{ 'is-collapsed': isSidebarCollapsed }">
         <div class="role-header-wrapper" v-show="!isSidebarCollapsed">
           <!-- 在侧边栏中使用 compact 模式展示当前正在对话的角色 -->
@@ -56,9 +71,27 @@ import { useChatStore } from './stores/chat';
 const chatStore = useChatStore();
 const isSidebarCollapsed = ref(false);
 
+// 访问密码验证
+const ACCESS_PASSWORD = 'vivid2024';
+const isAuthenticated = ref(localStorage.getItem('vivid_auth') === '1');
+const passwordInput = ref('');
+const passwordError = ref(false);
+
+function checkPassword() {
+  if (passwordInput.value === ACCESS_PASSWORD) {
+    localStorage.setItem('vivid_auth', '1');
+    isAuthenticated.value = true;
+    passwordError.value = false;
+  } else {
+    passwordError.value = true;
+  }
+}
+
 // 应用初始化：加载所有后端存储的角色信息
 onMounted(() => {
-  chatStore.loadRoles();
+  if (isAuthenticated.value) {
+    chatStore.loadRoles();
+  }
 });
 </script>
 
@@ -178,5 +211,77 @@ onMounted(() => {
   overflow: hidden;
   animation: fadeIn 0.8s ease-out 0.2s backwards;
   z-index: 5;
+}
+
+/* --- Password Gate --- */
+.password-gate {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  z-index: 9999;
+}
+
+.password-box {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 40px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.password-box h2 {
+  color: white;
+  margin-bottom: 24px;
+  font-size: 1.25rem;
+}
+
+.password-box input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  margin-bottom: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.password-box input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.password-box input:focus {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.password-box button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.password-box button:hover {
+  opacity: 0.9;
+}
+
+.password-box .error {
+  color: #ff6b6b;
+  margin-top: 12px;
+  font-size: 0.875rem;
 }
 </style>
