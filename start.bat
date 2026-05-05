@@ -35,7 +35,16 @@ cd ..
 echo.
 echo [2/3] Starting backend service...
 start "AI Chat - Backend" cmd /k "cd backend && npm run start:dev"
-timeout /t 3 /nobreak >nul
+
+echo Waiting for backend to be ready...
+:wait_loop
+timeout /t 2 /nobreak >nul
+curl -s http://localhost:3000/api/roles >nul 2>&1
+if %errorlevel% neq 0 (
+    echo   Still waiting...
+    goto wait_loop
+)
+echo   Backend is ready!
 
 echo [3/3] Starting frontend service...
 start "AI Chat - Frontend" cmd /k "cd frontend && npm run dev"
