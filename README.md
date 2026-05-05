@@ -53,7 +53,9 @@
 | 🔍 调试面板 | 查看原始请求/响应数据，辅助开发调试 |
 | 📚 会话管理 | 自动按角色分组会话，AI 智能生成对话标题 |
 
-> **在线演示**：`http://localhost:5173`（本地启动后访问）
+> **在线演示**：https://frontend-hp65hab76-qrx-joes-projects.vercel.app（访问密码：`vivid2024`）
+>
+> **本地开发**：`http://localhost:5173`（启动后访问）
 
 ### 截图预览
 
