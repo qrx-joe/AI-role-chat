@@ -1,7 +1,7 @@
 {
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://searched-tahoe-obtained-quarter.trycloudflare.com/api/$1" },
+    { "source": "/api/(.*)", "destination": "https://drawn-youth-cashiers-deleted.trycloudflare.com/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
