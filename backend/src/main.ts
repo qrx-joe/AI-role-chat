@@ -18,7 +18,11 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // --- 1. 跨域与安全配置 ---
-  app.enableCors();
+  const corsOrigin = process.env.CORS_ORIGIN;
+  app.enableCors({
+    origin: corsOrigin || true,
+    credentials: true,
+  });
 
   // --- 2. 报文解析优化 ---
   // 增加负载限制，确保前端发送的大图 Base64 字符串不会导致 413 Payload Too Large 错误
