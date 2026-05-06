@@ -109,6 +109,11 @@ Thumbs.db
 *.swo
 *~
 
+# Tools
+ngrok.zip
+ngrok.exe
+ngrok
+
 # Backend specific
 backend/dist/
 backend/logs/
